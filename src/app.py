@@ -1,0 +1,26 @@
+from flask import Flask, jsonify, request
+from validation.validation import check_input
+from service.ask import askService
+
+a = askService()
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, Flask on Mac!"
+
+@app.route("/ask", methods=["POST"])
+def ask():
+    body = request.get_json()
+    check = check_input(body)
+    if check is None:
+        return jsonify({"error": "Invalid input"}), 400
+    question = body['question']
+    answer = a.ask_service(question)
+    if answer is None:
+        return jsonify({"error": "Failed to get answer"}), 500
+    return jsonify({"answer": answer}), 200
+
+if __name__ == "__main__":
+    app.run(debug=True)

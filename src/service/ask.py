@@ -16,5 +16,5 @@ class askService:
         answer = createAnswer(rawData, query, question)
         if answer is None:
             return None
-        return answer, query
+        return answer
         

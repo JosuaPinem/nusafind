@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Media Antar Nusa (Nusanet) - Chat</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .logo i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .company-name {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .online-status {
+            display: flex;
+            align-items: center;
+            margin-top: 3px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .online-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            padding: 2rem 1.5rem 1rem;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* User messages - Sebelah Kanan */
+        .message.user {
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+            color: #2e7d32;
+        }
+
+        .message.user .message-time {
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        /* System messages - Sebelah Kiri */
+        .message.system {
+            align-self: flex-start;
+            margin-right: auto;
+        }
+
+        .message.system .message-bubble {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565c0;
+        }
+
+        .message.system .message-time {
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+            max-width: 100%;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1rem 1.5rem 1.5rem;
+            background-color: #f5f5f5;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 25px;
+            padding: 0.5rem 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: #29b6f6;
+            box-shadow: 0 4px 25px rgba(41, 182, 246, 0.15);
+        }
+
+        .message-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            background: transparent;
+            color: #333;
+        }
+
+        .message-input::placeholder {
+            color: #999;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #29b6f6 0%, #42a5f5 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+            box-shadow: 0 3px 12px rgba(41, 182, 246, 0.3);
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(41, 182, 246, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button i {
+            color: white;
+            font-size: 1.1rem;
+        }
+        .connected {
+            color: green; /* Teks berwarna hijau */
+        }
+
+        .disconnected {
+            color: red; /* Teks berwarna merah */
+        }
+
+        .connected-dot {
+            color: green; /* Titik hijau */
+        }
+
+        .disconnected-dot {
+            color: red; /* Titik merah */
+        }
+
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-area {
+                padding: 1rem;
+            }
+            
+            .input-area {
+                padding: 0.75rem 1rem 1rem;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            align-self: flex-start;
+            margin-right: auto;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .typing-bubble {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .typing-text {
+            color: #1565c0;
+            font-size: 0.95rem;
+            margin-right: 0.5rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #1565c0;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="logo">
+               <img src="{{url_for('static', filename=('/img/image.png'))}}" alt="Logo" width="60" height="48" class="d-inline-block align-text-top rounded-circle">
+            </div>
+            <div class="header-info">
+                <h1 class="company-name">PT Media Antar Nusa (Nusanet)</h1>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="connecting">Menghubungkan...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-comment-dots"></i>
+                <h3>Selamat datang!</h3>
+                <p>Beritahu kami data yang anda butuhkan!</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+       <!-- Input Area -->
+        <div class="input-area">
+            <div class="input-container">
+                <input 
+                    type="text" 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Ketik pesan anda disini..."
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let messageCount = 0;
+        var status = {{connection | tojson | safe}};
+
+        if(status === "success") {
+            connectionStatus.innerHTML = '<span class="connected"><i class="fas fa-circle"></i> Terhubung</span>';
+        } else {
+            connectionStatus.innerHTML = '<span class="disconnected"><i class="fas fa-circle"></i> Terputus</span>';
+        }
+
+        // Get current time in HH:MM format
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+        }
+
+        // Show typing indicator
+        function showTyping() {
+            const chatArea = document.getElementById('chatArea');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state if typing indicator is the first interaction
+            if (messageCount === 0) {
+                emptyState.style.display = 'none';
+            }
+            
+            // Create typing indicator element
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'activeTyping';
+            
+            typingDiv.innerHTML = `
+                <div class="typing-bubble">
+                    <span class="typing-text">Nusafind sedang mengetik</span>
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                chatArea.appendChild(typingDiv);
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }, 1000); // Trigger animation immediately 
+            
+            
+        }
+
+        // Hide typing indicator
+        function hideTyping() {
+            const activeTyping = document.getElementById('activeTyping');
+            if (activeTyping) {
+                activeTyping.remove();
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, type) {
+            const chatArea = document.getElementById('chatArea');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state on first message
+            if (messageCount === 0) {
+                emptyState.style.display = 'none';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${text}</div>
+                <div class="message-time">${getCurrentTime()}</div>
+            `;
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            messageCount++;
+        }
+
+        // Send message function
+        let waitingResponse = false;
+
+        function sendMessage() {
+            // Jangan kirim pesan jika masih menunggu balasan
+            if (waitingResponse) return;
+
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendButton');
+            const message = input.value.trim();
+
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+
+                // Set status menunggu dan nonaktifkan input + tombol
+                waitingResponse = true;
+                input.disabled = true;
+                sendBtn.disabled = true;
+
+                showTyping();
+
+                // Kirim pesan ke server Flask
+                fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: message })  // Mengirim pesan sebagai JSON
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideTyping();
+
+                    // Dapatkan respons dari Flask
+                    const randomResponse = data.answer;  // Respons yang diterima dari server Flask
+                    addMessage(randomResponse, 'system');
+
+                    // Balasan diterima, aktifkan input kembali
+                    waitingResponse = false;
+                    input.disabled = false;
+                    sendBtn.disabled = false;
+                    input.focus();
+                })
+                .catch(error => {
+                    hideTyping();
+                    console.error('Error:', error);
+                    addMessage("Terjadi kesalahan. Coba lagi.", 'system');
+                    waitingResponse = false;
+                    input.disabled = false;
+                    sendBtn.disabled = false;
+                    input.focus();
+                });
+            }
+        }
+
+
+
+        // Enter key to send
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Focus input on load
+        window.addEventListener('load', function() {
+            document.getElementById('messageInput').focus();
+        });
+
+        
+    </script>
+</body>
+</html>

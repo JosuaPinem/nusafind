@@ -479,11 +479,50 @@
             }
         }
 
+        function addMessageHistory(text, type,time) {
+            const chatArea = document.getElementById('chatArea');
+            const emptyState = document.getElementById('emptyState');
+            // Hide empty state on first message
+            if (messageCount === 0) {
+                emptyState.style.display = 'none';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">${text}</div>
+                <div class="message-time">${time}</div>
+            `;
+
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+            messageCount++;
+        }
+
+        // Mengambil data yang sudah di-render dari Flask ke dalam JavaScript
+        let chatHis = {{ hisChat | tojson }};
+        console.log(chatHis);
+
+        // Memeriksa apakah chatHis ada dan merupakan array yang valid
+        if (chatHis && Array.isArray(chatHis) && chatHis.length > 0) {
+            // Menggunakan reverse untuk menampilkan data dari yang terakhir
+            chatHis.reverse().forEach(chat => {
+                // Pastikan format waktu sudah benar (misal "HH:MM:SS")
+                addMessageHistory(`${chat.question}`, 'user', `${chat.time}`);
+                addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`);
+            });
+            hideTyping();  // Menyembunyikan indikator mengetik setelah chat diproses
+        } else {
+            console.log("No chat history available or invalid format.");
+            hideTyping();  // Menyembunyikan indikator mengetik jika tidak ada riwayat chat
+        }
+
+
         // Add message to chat
         function addMessage(text, type) {
             const chatArea = document.getElementById('chatArea');
             const emptyState = document.getElementById('emptyState');
-            
             // Hide empty state on first message
             if (messageCount === 0) {
                 emptyState.style.display = 'none';
@@ -504,59 +543,169 @@
 
         // Send message function
         let waitingResponse = false;
+        let isLoggedIn = {{isLogin | tojson | safe}};
+        let sessionId = {{session_id | tojson | safe}};
+        console.log("Session ID:", sessionId);
+        console.log("Is Logged In:", isLoggedIn);
 
         function sendMessage() {
-            // Jangan kirim pesan jika masih menunggu balasan
-            if (waitingResponse) return;
-
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendButton');
             const message = input.value.trim();
 
-            if (message) {
-                addMessage(message, 'user');
-                input.value = '';
+            // Jangan kirim pesan jika masih menunggu balasan
+            if (!message || waitingResponse) return;
+             // Show typing indicator when sending message    
+            addMessage(message, 'user');
 
-                // Set status menunggu dan nonaktifkan input + tombol
-                waitingResponse = true;
-                input.disabled = true;
-                sendBtn.disabled = true;
+             // Show typing indicator
+            input.value = '';
+            waitingResponse = true;
+            input.disabled = true;
+            sendBtn.disabled = true;
 
-                showTyping();
-
-                // Kirim pesan ke server Flask
-                fetch('/ask', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ question: message })  // Mengirim pesan sebagai JSON
+            // Jika user belum login dan pesan mengandung @ (anggap email)
+            if (!isLoggedIn && message.includes('@')) {
+                showTyping(); // Show typing indicator before login attempt
+                handleLogin(message);
+                hideTyping(); // Hide typing indicator after login attempt
+                return;
+            } else if (message == 'logout' || message == 'Logout' || message == 'LOGOUT' || message == 'Keluar' || message == 'keluar') {
+               if (!isLoggedIn){
+                    addMessage("Anda belum login", 'system');
+                    resetInput(input, sendBtn);
+                    return;
+               } // Handle logout
+                fetch('/logout')
+                    .then(response => response.json())
+                    .then(data => {
+                        isLoggedIn = false;
+                        sessionId = null;
+                        addMessage("Anda telah berhasil logout.", 'system');
+                        resetInput(input, sendBtn);
+                        return;
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        addMessage("Terjadi kesalahan saat logout. Coba lagi.", 'system');
+                        resetInput(input, sendBtn);
+                        return;
+                    })
+                    .finally(() => hideTyping()); // Hide typing indicator after logout
+                return;
+            } else if (message == "reset") {
+                fetch('/reset', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    hideTyping();
-
-                    // Dapatkan respons dari Flask
-                    const randomResponse = data.answer;  // Respons yang diterima dari server Flask
-                    addMessage(randomResponse, 'system');
-
-                    // Balasan diterima, aktifkan input kembali
-                    waitingResponse = false;
-                    input.disabled = false;
-                    sendBtn.disabled = false;
-                    input.focus();
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Session reset successful.");
+                        window.location.href = '/';  // Sesuaikan URL sesuai aplikasi kamu
+                    } else {
+                        console.error('Failed to reset session.');
+                    }
                 })
                 .catch(error => {
-                    hideTyping();
-                    console.error('Error:', error);
-                    addMessage("Terjadi kesalahan. Coba lagi.", 'system');
-                    waitingResponse = false;
-                    input.disabled = false;
-                    sendBtn.disabled = false;
-                    input.focus();
-                });
+                    console.error('Error during session reset:', error);
+                })
+                .finally(() => hideTyping()); // Hide typing indicator after reset
+                return;
+            } else if (message == 'help' || message == 'Help' || message == 'HELP') {
+                addMessage("Ketikkan email anda untuk login, atau ketik 'logout' untuk keluar. Dan ketik reset jika ingin menghapus chat", 'system');
+                resetInput(input, sendBtn);
+                hideTyping();
+                return;
+            } else if (message == 'clear' || message == 'Clear' || message == 'CLEAR') {
+                document.getElementById('chatArea').innerHTML = '';
+                emptyState.style.display = 'block';
+                resetInput(input, sendBtn);
+                hideTyping();
+                return;
             }
+
+            if (isLoggedIn) {
+                showTyping(); // Show typing indicator before asking
+                handleAsk(message); // Ask if already logged in
+                hideTyping(); // Hide typing indicator after ask
+            } else {
+                addMessage("Silakan masukkan email untuk login terlebih dahulu.", 'system');
+                resetInput(input, sendBtn);
+                hideTyping();
+            }
+            console.log("Bawah")
         }
+
+        // Fungsi untuk menangani login
+        function handleLogin(email) {
+            hideTyping();
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendButton');
+            fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.answer) {
+                    sessionId = data.answer;
+                    isLoggedIn = true;
+                    window.location.href = '/';
+                    addMessage(`Halo selamat datang, ${sessionId}. Ada yang bisa kami bantu?`, 'system');
+                    if (data.hisChat && data.hisChat.length > 0) {
+                        data.hisChat.reverse().forEach(chat => {
+                            // Menambahkan question dan respons ke dalam chat
+                            addMessageHistory(`${chat.question}`, 'user', `${chat.time}`);
+                            addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`);
+                        });
+                        hideTyping(); 
+                    }
+                    hideTyping(); // Hide typing indicator after login
+                } else if (data.error) {
+                    addMessage(data.error, 'system');
+                    hideTyping();
+                }
+                hideTyping(); // Hide typing indicator after login attempt
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                addMessage("Terjadi kesalahan saat login. Coba lagi.", 'system');
+            })
+            .finally(() => resetInput(input, sendBtn)); hideTyping(); // Always reset input after login attempt
+        }
+
+        // Fungsi untuk menangani pengiriman pertanyaan setelah login
+        function handleAsk(message) {
+            hideTyping();
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendButton');
+            fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: message, session_id: sessionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                addMessage(data.answer, 'system');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage("Terjadi kesalahan. Coba lagi.", 'system');
+            })
+            .finally(() => resetInput(input, sendBtn)); hideTyping(); // Always reset input after ask
+        }
+
+        function resetInput(input, sendBtn) {
+            waitingResponse = false;
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+            hideTyping(); // Hide typing indicator when done
+        }
+
+
+
 
 
 
@@ -572,6 +721,7 @@
             document.getElementById('messageInput').focus();
         });
 
+        setInterval(isLoggedIn, sessionId, 5000)
         
     </script>
 </body>

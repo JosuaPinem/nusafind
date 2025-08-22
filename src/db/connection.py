@@ -14,6 +14,20 @@ def create_connection():
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return None
+    
+
+def create_local_connection():
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv('DB_HOST_LOCAL'),
+            user=os.getenv('DB_USERNAME_LOCAL'),
+            password=os.getenv('DB_PASSWORD_LOCAL'),
+            database=os.getenv('DB_NAME_LOCAL')
+        )
+        return conn
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
 
 
 

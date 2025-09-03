@@ -535,7 +535,7 @@
             messageDiv.className = `message ${type}`;
             
             messageDiv.innerHTML = `
-                <div class="message-bubble">${text}</div>
+                <div class="message-bubble" style="overflow-x: auto; width: 100%;">${text}</div>
                 <div class="message-time">${getCurrentTime()}</div>
             `;
 

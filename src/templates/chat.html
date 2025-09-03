@@ -596,7 +596,7 @@
                     })
                     .finally(() => hideTyping()); // Hide typing indicator after logout
                 return;
-            } else if (message == "reset") {
+            } else if (message == "reset" || message == "Reset" || message == "RESET") {
                 fetch('/reset', {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }

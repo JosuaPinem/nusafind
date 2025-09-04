@@ -9,375 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f5f5;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            max-width: 100%;
-            margin: 0 auto;
-            background-color: #f5f5f5;
-        }
-
-        /* Header */
-        .chat-header {
-            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .logo {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-        }
-
-        .logo i {
-            color: white;
-            font-size: 1.5rem;
-        }
-
-        .header-info {
-            flex: 1;
-        }
-
-        .company-name {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .online-status {
-            display: flex;
-            align-items: center;
-            margin-top: 3px;
-        }
-
-        .online-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #4caf50;
-            border-radius: 50%;
-            margin-right: 6px;
-            animation: pulse 2s infinite;
-        }
-
-        .online-text {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.85rem;
-            font-weight: 400;
-        }
-
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
-            padding: 2rem 1.5rem 1rem;
-            overflow-y: auto;
-            background-color: #f5f5f5;
-        }
-
-        .chat-area::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-area::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .chat-area::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 3px;
-        }
-
-        .message {
-            margin-bottom: 1rem;
-            display: flex;
-            flex-direction: column;
-            max-width: 70%;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        /* User messages - Sebelah Kanan */
-        .message.user {
-            align-self: flex-end;
-            margin-left: auto;
-        }
-
-        .message.user .message-bubble {
-            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
-            color: #2e7d32;
-        }
-
-        .message.user .message-time {
-            align-self: flex-end;
-            text-align: right;
-        }
-
-        /* System messages - Sebelah Kiri */
-        .message.system {
-            align-self: flex-start;
-            margin-right: auto;
-        }
-
-        .message.system .message-bubble {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1565c0;
-        }
-
-        .message.system .message-time {
-            align-self: flex-start;
-            text-align: left;
-        }
-
-        .message-bubble {
-            padding: 0.75rem 1rem;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-wrap: break-word;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            position: relative;
-            max-width: 100%;
-        }
-
-        .message-time {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 0.25rem;
-        }
-
-        /* Input Area */
-        .input-area {
-            padding: 1rem 1.5rem 1.5rem;
-            background-color: #f5f5f5;
-        }
-
-        .input-container {
-            display: flex;
-            align-items: center;
-            background: white;
-            border-radius: 25px;
-            padding: 0.5rem 0.75rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .input-container:focus-within {
-            border-color: #29b6f6;
-            box-shadow: 0 4px 25px rgba(41, 182, 246, 0.15);
-        }
-
-        .message-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            background: transparent;
-            color: #333;
-        }
-
-        .message-input::placeholder {
-            color: #999;
-        }
-
-        .send-button {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, #29b6f6 0%, #42a5f5 100%);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            margin-left: 0.5rem;
-            box-shadow: 0 3px 12px rgba(41, 182, 246, 0.3);
-        }
-
-        .send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(41, 182, 246, 0.4);
-        }
-
-        .send-button:active {
-            transform: translateY(0);
-        }
-
-        .send-button i {
-            color: white;
-            font-size: 1.1rem;
-        }
-        .connected {
-            color: green; /* Teks berwarna hijau */
-        }
-
-        .disconnected {
-            color: red; /* Teks berwarna merah */
-        }
-
-        .connected-dot {
-            color: green; /* Titik hijau */
-        }
-
-        .disconnected-dot {
-            color: red; /* Titik merah */
-        }
-
-
-        /* Animations */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 0.7;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .chat-area {
-                padding: 1rem;
-            }
-            
-            .input-area {
-                padding: 0.75rem 1rem 1rem;
-            }
-            
-            .message {
-                max-width: 85%;
-            }
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: #999;
-        }
-
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.3;
-        }
-
-        .empty-state h3 {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: #666;
-        }
-
-        .empty-state p {
-            color: #999;
-            font-size: 0.9rem;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            align-self: flex-start;
-            margin-right: auto;
-            margin-bottom: 1rem;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .typing-bubble {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 0.75rem 1rem;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .typing-text {
-            color: #1565c0;
-            font-size: 0.95rem;
-            margin-right: 0.5rem;
-        }
-
-        .typing-dots {
-            display: flex;
-            gap: 3px;
-        }
-
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background-color: #1565c0;
-            border-radius: 50%;
-            animation: typingAnimation 1.4s infinite;
-        }
-
-        .typing-dot:nth-child(1) {
-            animation-delay: 0s;
-        }
-
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typingAnimation {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.4;
-            }
-            30% {
-                transform: translateY(-8px);
-                opacity: 1;
-            }
-        }
-        table {
-            min-width: 600px; /* optional: memberi lebar minimum agar kolom tetap readable */
-        }
-    </style>
+    <link rel="stylesheet" href="{{url_for('static', filename=('/css/chat.css'))}}">
+    
 </head>
 <body>
     <div class="chat-container">
@@ -404,7 +37,6 @@
         </div>
 
         <!-- Input Area -->
-       <!-- Input Area -->
         <div class="input-area">
             <div class="input-container">
                 <input 
@@ -419,18 +51,34 @@
                 </button>
             </div>
         </div>
-
     </div>
 
-    <script>
+    <!-- Modal for displaying SQL Query -->
+    <div id="sqlModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-code"></i> SQL Query</h3>
+                <button class="close-btn" onclick="closeSqlModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="sqlModalBody">
+                <!-- SQL content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script >
         let messageCount = 0;
         var status = {{connection | tojson | safe}};
-
         if(status === "success") {
             connectionStatus.innerHTML = '<span class="connected"><i class="fas fa-circle"></i> Terhubung</span>';
         } else {
             connectionStatus.innerHTML = '<span class="disconnected"><i class="fas fa-circle"></i> Terputus</span>';
         }
+
+        // Storage untuk SQL queries dari server - dinamis
+        let sqlQueriesStorage = {};
 
         // Get current time in HH:MM format
         function getCurrentTime() {
@@ -471,8 +119,6 @@
                 chatArea.appendChild(typingDiv);
                 chatArea.scrollTop = chatArea.scrollHeight;
             }, 1000); // Trigger animation immediately 
-            
-            
         }
 
         // Hide typing indicator
@@ -483,7 +129,29 @@
             }
         }
 
-        function addMessageHistory(text, type,time) {
+        // Generate unique ID untuk setiap SQL query
+        function generateSqlId() {
+            return 'sql_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Store SQL query dari server
+        function storeSqlQuery(sqlQuery) {
+            if (!sqlQuery || sqlQuery.trim() === '') return null;
+            
+            const sqlId = generateSqlId();
+            sqlQueriesStorage[sqlId] = {
+                title: "PT Media Antar Nusa | Nusafind",
+                description: "Query yang di generate berdasarkan pertanyaan kamu",
+                sql: sqlQuery
+            };
+            
+            console.log('Stored SQL query with ID:', sqlId);
+            console.log('Query:', sqlQuery);
+            return sqlId;
+        }
+
+        // Modified addMessageHistory to support SQL queries from server
+        function addMessageHistory(text, type, time, sqlQuery = null) {
             const chatArea = document.getElementById('chatArea');
             const emptyState = document.getElementById('emptyState');
             // Hide empty state on first message
@@ -494,9 +162,31 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             
+            // Store SQL query dan create bubble jika ada
+            let sqlBubble = '';
+            if (sqlQuery && sqlQuery.trim() !== '') {
+                const sqlId = storeSqlQuery(sqlQuery);
+                if (sqlId) {
+                    sqlBubble = `
+                        <div class="sql-query-bubble" onclick="showSqlModal('${sqlId}')">
+                            <i class="fas fa-code"></i>
+                        </div>
+                    `;
+                }
+            }
+            
             messageDiv.innerHTML = `
-                <div class="message-bubble" style="overflow-x: auto; width: 100%;">${text}</div>
+                <div class="message-bubble" 
+                    style="overflow-x:auto; width:100%; display:flex; flex-direction:column; align-items:flex-start;">
+                    <div class="bubble-text" style="align-self:stretch;">
+                        ${text}
+                    </div>
+                    <div class="sql-bubble-wrapper" style="align-self:flex-end; margin-top:0.5rem;">
+                        ${sqlBubble}
+                    </div>
+                </div>
                 <div class="message-time">${time}</div>
+                
             `;
 
             chatArea.appendChild(messageDiv);
@@ -506,7 +196,7 @@
 
         // Mengambil data yang sudah di-render dari Flask ke dalam JavaScript
         let chatHis = {{ hisChat | tojson }};
-        console.log(chatHis);
+        console.log('Chat History:', chatHis);
 
         // Memeriksa apakah chatHis ada dan merupakan array yang valid
         if (chatHis && Array.isArray(chatHis) && chatHis.length > 0) {
@@ -514,7 +204,9 @@
             chatHis.reverse().forEach(chat => {
                 // Pastikan format waktu sudah benar (misal "HH:MM:SS")
                 addMessageHistory(`${chat.question}`, 'user', `${chat.time}`);
-                addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`);
+                // Pass SQL query dari server untuk system message
+                const sqlQuery = chat.query || null;
+                addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`, sqlQuery);
             });
             hideTyping();  // Menyembunyikan indikator mengetik setelah chat diproses
         } else {
@@ -522,9 +214,8 @@
             hideTyping();  // Menyembunyikan indikator mengetik jika tidak ada riwayat chat
         }
 
-
-        // Add message to chat
-        function addMessage(text, type) {
+        // Modified addMessage to support SQL queries from server
+        function addMessage(text, type, sqlQuery = null) {
             const chatArea = document.getElementById('chatArea');
             const emptyState = document.getElementById('emptyState');
             // Hide empty state on first message
@@ -535,14 +226,111 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             
+            // Store SQL query dan create bubble jika ada
+            let sqlBubble = '';
+            if (sqlQuery && sqlQuery.trim() !== '') {
+                const sqlId = storeSqlQuery(sqlQuery);
+                if (sqlId) {
+                    sqlBubble = `
+                        <div class="sql-query-bubble" onclick="showSqlModal('${sqlId}')">
+                            <i class="fas fa-code"></i>
+                        </div>
+                    `;
+                    console.log('SQL Bubble akan ditampilkan untuk query:', sqlQuery);
+                }
+            }
+            
             messageDiv.innerHTML = `
                 <div class="message-bubble" style="overflow-x: auto; width: 100%;">${text}</div>
                 <div class="message-time">${getCurrentTime()}</div>
+                ${sqlBubble}
             `;
 
             chatArea.appendChild(messageDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
             messageCount++;
+        }
+        // Show SQL modal
+        function showSqlModal(sqlId) {
+            const modal = document.getElementById('sqlModal');
+            const modalBody = document.getElementById('sqlModalBody');
+            
+            if (!sqlQueriesStorage[sqlId]) {
+                console.error('SQL query not found for ID:', sqlId);
+                modalBody.innerHTML = '<p>Query SQL tidak ditemukan.</p>';
+                modal.style.display = 'block';
+                return;
+            }
+            
+            const queryData = sqlQueriesStorage[sqlId];
+            console.log('Showing SQL modal for:', queryData);
+
+            const plain = normalizeIndent(queryData.sql);           // PLAIN TEXT (tanpa span)
+            const highlighted = formatSqlCode(escapeHtml(plain));   // HTML (dengan <span>)
+
+            modalBody.innerHTML = `
+            <div class="query-info">
+                <h4>${queryData.title}</h4>
+                <p>${queryData.description}</p>
+            </div>
+
+            <div class="sql-code">
+                <button class="copy-btn" data-target="sql-plain-${sqlId}" onclick="copyToClipboard(this)">
+                <i class="fas fa-copy"></i> Copy
+                </button>
+
+                <pre class="sql-block"><code id="sql-highlight-${sqlId}">${highlighted}</code></pre>
+                <!-- simpan plain text tersembunyi untuk keperluan copy -->
+                <pre id="sql-plain-${sqlId}" style="display:none;">${plain}</pre>
+            </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function normalizeIndent(sql) {
+        const lines = String(sql).replace(/\t/g, '  ').replace(/\\n/g, '\n').split('\n');
+        const nonEmpty = lines.filter(l => l.trim().length);
+        const base = nonEmpty.length ? Math.min(...nonEmpty.map(l => (l.match(/^[ \t]*/)[0] || '').length)) : 0;
+        return lines.map(l => l.slice(base)).join('\n').trim();
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // HIGHLIGHT: jalankan SETELAH escapeHtml
+        function formatSqlCode(sql) {
+            return sql
+                .replace(/\b(SELECT|FROM|WHERE|INNER JOIN|LEFT JOIN|RIGHT JOIN|GROUP BY|ORDER BY|HAVING|LIMIT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP|INDEX|TABLE|DATABASE|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS NULL|IS NOT NULL|DISTINCT|COUNT|SUM|AVG|MAX|MIN|DATE_FORMAT|NOW|INTERVAL|ON|AS|CASE|WHEN|THEN|ELSE|END)\b/gi, '<span class="sql-keyword">$1</span>')
+                .replace(/'([^']*?)'/g, '<span class="sql-string">\'$1\'</span>')
+                .replace(/--([^\n]*)/g, '<span class="sql-comment">--$1</span>')
+                .replace(/\b(customer_id|nama_lengkap|email|no_telepon|alamat|tanggal_daftar|status_aktif|transaksi_id|nama_pelanggan|produk_id|jumlah_pembayaran|tanggal_transaksi)\b/g, '<span class="sql-function">$1</span>');
+        }
+        // Copy SQL to clipboard
+        function copyToClipboard(button) {
+            const plainId = button.getAttribute('data-target');
+            const plainEl = document.getElementById(plainId);
+            const text = plainEl ? plainEl.textContent : '';
+
+            navigator.clipboard.writeText(text).then(() => {
+                const original = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                button.innerHTML = original;
+                button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+
+        // Close SQL modal
+        function closeSqlModal() {
+            const modal = document.getElementById('sqlModal');
+            modal.style.display = 'none';
         }
 
         // Send message function
@@ -661,7 +449,9 @@
                         data.hisChat.reverse().forEach(chat => {
                             // Menambahkan question dan respons ke dalam chat
                             addMessageHistory(`${chat.question}`, 'user', `${chat.time}`);
-                            addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`);
+                            // Pass SQL query dari server untuk system message
+                            const sqlQuery = chat.query || null;
+                            addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`, sqlQuery);
                         });
                         hideTyping(); 
                     }
@@ -679,7 +469,7 @@
             .finally(() => resetInput(input, sendBtn)); hideTyping(); // Always reset input after login attempt
         }
 
-        // Fungsi untuk menangani pengiriman pertanyaan setelah login
+        // Modified handleAsk function to handle SQL queries from server
         function handleAsk(message) {
             hideTyping();
             const input = document.getElementById('messageInput');
@@ -691,7 +481,15 @@
             })
             .then(response => response.json())
             .then(data => {
-                addMessage(data.answer, 'system');
+                console.log('Backend response:', data); // Debug
+                
+                // Get SQL query from server response
+                const sqlQuery = data.query || null;
+                
+                console.log('Received SQL query from server:', sqlQuery); // Debug
+                
+                // Add message dengan SQL query jika ada
+                addMessage(data.answer, 'system', sqlQuery);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -708,17 +506,20 @@
             hideTyping(); // Hide typing indicator when done
         }
 
-
-
-
-
-
         // Enter key to send
         document.getElementById('messageInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('sqlModal');
+            if (event.target === modal) {
+                closeSqlModal();
+            }
+        }
 
         // Focus input on load
         window.addEventListener('load', function() {

@@ -9,25 +9,25 @@ class askService:
         if isquery == "Tidak":
             fillter = fillterQuestion(question)
             if fillter == "False":
-                return "Mohon maaf sebelumnya, permintaan yang Anda ajukan tidak dapat diproses karena tidak sesuai dengan data yang tersedia. Untuk data yang anda butuhkan silahkan hubungi Tim BIS untuk membantu Anda!."
+                return "Mohon maaf sebelumnya, permintaan yang Anda ajukan tidak dapat diproses karena tidak sesuai dengan data yang tersedia. Untuk data yang anda butuhkan silahkan hubungi Tim BIS untuk membantu Anda!.", None
 
         query = createQuery(question)
 
         if query is None:
-            return None
+            return None, None
         
         rawData = getRawData(query)
 
         if rawData is None:
-            return None
+            return None, None
         
         answer = createAnswer(rawData, query, question)
         if answer is None:
-            return None
+            return None, None
         save = saveData(session_id, question, query, rawData, answer)
         if save is False:
-            return "Mohon maaf data tidak berhasil disimpan."
-        return answer
+            return "Mohon maaf data tidak berhasil disimpan.", ""
+        return answer, query
     
     def getChatHis(self, session_id):
         conn = create_local_connection()

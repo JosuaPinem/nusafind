@@ -4,7 +4,7 @@ from db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
 from model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ
-import os
+import os, sqlparse
 from dotenv import load_dotenv
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -14,9 +14,21 @@ import re
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
 
 def clean_sql(answer: str) -> str:
-    # hapus ```sql ... ``` wrapper
-    query = re.sub(r"```(?:sql)?\n?([\s\S]*?)```", r"\1", answer).strip()
-    return query.replace("\\n", " ").replace("\n", " ").strip()
+    # 1) ambil isi di dalam ```sql ... ``` atau ``` ... ```
+    code = re.sub(r"```(?:sql)?\r?\n?([\s\S]*?)```", r"\1", answer).strip()
+
+    # 2) normalisasi newline yang di-escape jadi newline beneran
+    #    dan rapikan spasi ganda
+    code = code.replace("\\n", "\n")
+    code = re.sub(r"[ \t]+", " ", code).strip()
+
+    # 3) format pakai sqlparse
+    return sqlparse.format(
+        code,
+        reindent=True,           # tata letak & indentasi
+        keyword_case="upper",    # SELECT, FROM, dsb jadi UPPERCASE
+        strip_comments=False
+    )
 
 def fillterQuestion(question):
     reformat = promptFilter.format(question=question)
@@ -80,8 +92,8 @@ def saveData(session_id, question, query, rawData, answer):
         )
         conn.commit()
         cursor.execute(
-        "INSERT INTO history (session_id, time, question, respons) VALUES (%s, NOW(), %s, %s)",
-            (session_id, question, answer)  
+        "INSERT INTO history (session_id, time, question, respons, query) VALUES (%s, NOW(), %s, %s, %s)",
+            (session_id, question, answer, query)  
         )
         conn.commit()
         return True
@@ -97,3 +109,14 @@ def isQuery(question):
 
     answer = llm.invoke(reformat)
     return answer.content
+
+
+if __name__ == "__main__":
+    raw = """```sql
+    SELECT i.cid, i.csid, i.description, i.created_at,
+           (CASE WHEN i.paid = 1 THEN i.amount ELSE i.amount * 1.1 END) AS total_amount
+    FROM invoice i JOIN service_internet si ON i.csid = si.csid
+    WHERE MONTH(i.created_at) = 3 AND YEAR(i.created_at) = 2025
+    ORDER BY total_amount DESC LIMIT 5;
+    ```"""
+    print(clean_sql(raw))

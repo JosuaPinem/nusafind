@@ -31,10 +31,10 @@ def home():
                 if isinstance(chat['time'], timedelta):
                     chat['time'] = timedelta_to_string(chat['time'])  # Convert to HH:MM:SS
 
-            return render_template("chat.html", isLogin=True, session_id=session['session_id'], connection=connecions, hisChat=getHistory)
+            return render_template("chat.html", isLogin=True, session_id=session['session_id'], connection=connecions, hisChat=getHistory, sql_key="data_pelanggan")
 
         # Jika tidak ada riwayat chat
-        return render_template("chat.html", isLogin=True, session_id=session['session_id'], connection=connecions, hisChat=None)
+        return render_template("chat.html", isLogin=True, session_id=session['session_id'], connection=connecions, hisChat=None, sql_key="data_pelanggan")
     
     # Jika session_id tidak ada (user belum login)
     if conn is None:
@@ -54,10 +54,10 @@ def ask():
     if check is None:
         return jsonify({"error": "Invalid input"}), 400
     question = body['question']
-    answer = a.ask_service(question, session_id)
+    answer, query = a.ask_service(question, session_id)
     if answer is None:
         return jsonify({"error": "Failed to get answer"}), 500
-    return jsonify({"answer": answer}), 200
+    return jsonify({"answer": answer, "query":query}), 200
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -84,7 +84,8 @@ def login():
         "answer": answer, 
         "isLogin": True, 
         "session_id": session['session_id'], 
-        "hisChat": getHistory  # Kirim riwayat chat dengan time yang sudah diubah
+        "hisChat": getHistory,  # Kirim riwayat chat dengan time yang sudah diubah
+        'sql_key': "data_pelanggan"
     }), 200
 
 # Fungsi untuk mengonversi timedelta ke string (HH:MM:SS)

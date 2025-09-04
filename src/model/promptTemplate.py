@@ -53,7 +53,6 @@ promptGetAnswer = PromptTemplate.from_template(
         Setiap permintaan mengenai data mengenai service_price atau amount harus kamu buat dalam rupiah contoh Rp. 100.000,00
         Jika memungkinkan, buatkan data visualisasi yang menarik menggunakan html dan css. Ingat jangan membuat tag html, body, head, atau tag lainnya yang tidak perlu, gunakan table saja.
         Dan ingat jangan memberikan tag meta, link, atau script apapun. Dan untuk tablenya buat stylenya agar lebih menarik.
-        Jangan lupa menabahkan pesan: Adapaun query sql yang digunakan adalah : (masukkan querry diatas)
         Tolak jika user meminta insert data atau update data dengan respons: Jika ingin (menambah/ mengubah) data, silahkan hubungi Tim BIS;
     """
 )

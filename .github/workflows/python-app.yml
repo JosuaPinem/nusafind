@@ -9,6 +9,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.10
@@ -20,6 +31,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest coverage coveralls
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Setup Database
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE IF NOT EXISTS testdb;"
+        mysql -h 127.0.0.1 -P 3306 -u root -proot testdb < schema.sql  # Jika ada schema file
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -39,3 +54,8 @@ jobs:
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         OPENAI_API_KEY: "sk-dummy-key-for-testing"
+        DB_HOST: "127.0.0.1"
+        DB_PORT: "3306"
+        DB_USER: "root"
+        DB_PASSWORD: "root"
+        DB_NAME: "testdb"

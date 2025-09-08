@@ -4,12 +4,10 @@ import mysql.connector
 from flask import jsonify, request, Flask
 
 
-# Ganti fungsi login_service di src/service/login.py dengan ini:
-
 def login_service(email):
     get_email = getMail(email)
     if not get_email:
-        return False  # Email tidak valid / tidak ditemukan
+        return False  # email tidak valid / tidak ditemukan
 
     conn = None
     cursor = None
@@ -18,9 +16,10 @@ def login_service(email):
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT session_id FROM users WHERE email = %s", (get_email,))
         row = cursor.fetchone()
-        if row is None:
+        if not row:
             return False
-        return row.get("session_id")  # bisa string, "" atau None sesuai DB
+        # Ambil session_id persis dari DB (bisa string, "", atau None)
+        return row.get("session_id")
 
     except mysql.connector.Error as e:
         print(f"Database error in login_service: {e}")
@@ -28,6 +27,12 @@ def login_service(email):
 
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass

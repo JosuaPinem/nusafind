@@ -23,7 +23,7 @@ def login_service(email):
         cursor = conn.cursor(dictionary=True)
         
         # Query untuk mencari user dan session_id
-        query = "SELECT session_id FROM users WHERE email = %s"
+        query = "SELECT session_id FROM users WHERE session_id = %s"
         cursor.execute(query, (email,))
         user = cursor.fetchone()
         

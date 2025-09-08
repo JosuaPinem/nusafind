@@ -8,7 +8,8 @@ import os, sqlparse
 from dotenv import load_dotenv
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
-os.environ["OPENAI_API_KEY"] = openai_api_key
+# Ganti baris 11 di src/model/model.py  
+os.environ["OPENAI_API_KEY"] = openai_api_key or "dummy-key-for-testing"
 import re
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)

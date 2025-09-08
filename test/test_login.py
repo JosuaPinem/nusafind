@@ -45,7 +45,8 @@ class TestLoginService:
         mock_get_mail.return_value = "test@email.com"
         
         mock_cursor = Mock()
-        mock_cursor.fetchone.return_value = {"session_id": "session_123"}
+        # FIXED: Return email yang sama karena session_id berisi email
+        mock_cursor.fetchone.return_value = {"session_id": "test@email.com"}
         
         mock_conn = Mock()
         mock_conn.cursor.return_value = mock_cursor
@@ -55,7 +56,8 @@ class TestLoginService:
         result = login_service("test@email.com")
         
         # Assert
-        assert result == "session_123"
+        # FIXED: Expect email yang sama karena session_id = email
+        assert result == "test@email.com"
         mock_get_mail.assert_called_once_with("test@email.com")
         mock_connection.assert_called_once()
         mock_conn.cursor.assert_called_once_with(dictionary=True)
@@ -202,7 +204,8 @@ def test_login_service_various_emails(email_input, get_mail_result, expected):
         # Mock connection dan cursor supaya tidak connect ke MySQL asli
         mock_cursor = MagicMock()
         mock_conn.return_value.cursor.return_value = mock_cursor
-        mock_cursor.fetchone.return_value = {"email": get_mail_result} if get_mail_result else None
+        # FIXED: Return session_id (yang berisi email), bukan kolom email
+        mock_cursor.fetchone.return_value = {"session_id": get_mail_result} if get_mail_result else None
 
         result = login_service(email_input)
         assert (result is not False) == expected
@@ -219,13 +222,13 @@ class TestLoginServiceIntegration:
         # Setup - simulate real scenario
         email = "user@example.com"
         validated_email = "user@example.com"
-        session_id = "abc123def456"
         
         mock_get_mail.return_value = validated_email
         
         # Mock database response
         mock_cursor = Mock()
-        mock_cursor.fetchone.return_value = {"session_id": session_id}
+        # FIXED: Return email yang sama karena session_id berisi email
+        mock_cursor.fetchone.return_value = {"session_id": validated_email}
         
         mock_conn = Mock()
         mock_conn.cursor.return_value = mock_cursor
@@ -235,7 +238,8 @@ class TestLoginServiceIntegration:
         result = login_service(email)
         
         # Assert complete flow
-        assert result == session_id
+        # FIXED: Expect email karena session_id = email
+        assert result == validated_email
         
         # Verify call sequence
         mock_get_mail.assert_called_once_with(email)

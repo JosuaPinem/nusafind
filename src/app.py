@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, session, url_for
+from flask import Flask, jsonify, request, render_template, session, url_for, redirect
 from validation.validation import check_input
 from service.ask import askService
 from service.login import login_service
@@ -110,7 +110,7 @@ def logout():
 @app.route("/reset", methods=["GET"])
 def reset():
     session.pop('session_id', None)
-    return url_for('home')
+    return redirect(url_for('home'))
 
 
 if __name__ == "__main__":

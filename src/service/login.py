@@ -4,23 +4,33 @@ import mysql.connector
 from flask import jsonify, request, Flask
 
 
+# Ganti fungsi login_service di src/service/login.py dengan ini:
+
 def login_service(email):
     get_email = getMail(email)
     if not get_email:
-        return False  # Email tidak valid atau tidak ditemukan
-
-    conn = create_local_connection()
-    cursor = conn.cursor(dictionary=True)
+        return False # Email tidak valid atau tidak ditemukan
+    
     try:
-        cursor.execute("SELECT session_id FROM users WHERE session_id = %s", (get_email,))
-        user = cursor.fetchone()
-        if user:
-            return user['session_id']  # Hanya kirim session_id ke client
-        else:
+        conn = create_local_connection()
+        if conn is None:
+            # Handle database connection failure
+            print("Warning: Database connection failed, skipping database check")
             return False
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
-        return False
-    finally:
+            
+        cursor = conn.cursor(dictionary=True)
+        
+        # Your existing database logic here
+        # Example:
+        query = "SELECT * FROM users WHERE email = %s"
+        cursor.execute(query, (email,))
+        user = cursor.fetchone()
+        
         cursor.close()
         conn.close()
+        
+        return user is not None
+        
+    except Exception as e:
+        print(f"Database error in login_service: {e}")
+        return False

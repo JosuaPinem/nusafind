@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 import mysql.connector
-from service.login import login_service  # sesuaikan dengan lokasi fungsi
+from service.login import login_service
 
 
 class TestLoginService:
@@ -20,7 +20,7 @@ class TestLoginService:
         # Assert
         assert result is False
         mock_get_mail.assert_called_once_with("invalid@email.com")
-        mock_connection.assert_not_called()  # connection tidak dipanggil
+        mock_connection.assert_not_called()
     
     @patch('service.login.getMail')
     @patch('service.login.create_local_connection')
@@ -42,28 +42,29 @@ class TestLoginService:
     def test_login_service_user_found(self, mock_connection, mock_get_mail):
         """Test ketika user ditemukan di database"""
         # Setup
-        mock_get_mail.return_value = "test@email.com"
+        email = "test@email.com"
+        mock_get_mail.return_value = email
         
         mock_cursor = Mock()
-        # FIXED: Return email yang sama karena session_id berisi email
-        mock_cursor.fetchone.return_value = {"session_id": "test@email.com"}
+        # FIXED: session_id berisi EMAIL yang sama dengan input
+        mock_cursor.fetchone.return_value = {"session_id": email}
         
         mock_conn = Mock()
         mock_conn.cursor.return_value = mock_cursor
         mock_connection.return_value = mock_conn
         
         # Execute
-        result = login_service("test@email.com")
+        result = login_service(email)
         
         # Assert
-        # FIXED: Expect email yang sama karena session_id = email
-        assert result == "test@email.com"
-        mock_get_mail.assert_called_once_with("test@email.com")
+        # FIXED: Return email yang sama
+        assert result == email
+        mock_get_mail.assert_called_once_with(email)
         mock_connection.assert_called_once()
         mock_conn.cursor.assert_called_once_with(dictionary=True)
         mock_cursor.execute.assert_called_once_with(
             "SELECT session_id FROM users WHERE session_id = %s", 
-            ("test@email.com",)
+            (email,)
         )
         mock_cursor.fetchone.assert_called_once()
         mock_cursor.close.assert_called_once()
@@ -96,7 +97,7 @@ class TestLoginService:
     
     @patch('service.login.getMail')
     @patch('service.login.create_local_connection')
-    @patch('builtins.print')  # Mock print untuk test error handling
+    @patch('builtins.print')
     def test_login_service_database_error(self, mock_print, mock_connection, mock_get_mail):
         """Test ketika terjadi database error"""
         # Setup
@@ -116,7 +117,7 @@ class TestLoginService:
         assert result is False
         mock_get_mail.assert_called_once_with("test@email.com")
         mock_cursor.execute.assert_called_once()
-        mock_print.assert_called_once()  # Error di-print
+        mock_print.assert_called_once()
         mock_cursor.close.assert_called_once()
         mock_conn.close.assert_called_once()
     
@@ -128,7 +129,7 @@ class TestLoginService:
         mock_get_mail.return_value = "test@email.com"
         
         mock_cursor = Mock()
-        mock_cursor.execute.side_effect = mysql.connector.Error("MySQL connection failed")  # ✅
+        mock_cursor.execute.side_effect = mysql.connector.Error("MySQL connection failed")
         
         mock_conn = Mock()
         mock_conn.cursor.return_value = mock_cursor
@@ -151,7 +152,8 @@ class TestLoginServiceEdgeCases:
     def test_login_service_empty_session_id(self, mock_connection, mock_get_mail):
         """Test ketika database return empty session_id"""
         # Setup
-        mock_get_mail.return_value = "test@email.com"
+        email = "test@email.com"
+        mock_get_mail.return_value = email
         
         mock_cursor = Mock()
         mock_cursor.fetchone.return_value = {"session_id": ""}  # Empty session_id
@@ -161,17 +163,18 @@ class TestLoginServiceEdgeCases:
         mock_connection.return_value = mock_conn
         
         # Execute
-        result = login_service("test@email.com")
+        result = login_service(email)
         
         # Assert
-        assert result == ""  # Function return apapun yang ada di database
+        assert result == ""
     
     @patch('service.login.getMail')
     @patch('service.login.create_local_connection')
     def test_login_service_null_session_id(self, mock_connection, mock_get_mail):
         """Test ketika database return NULL session_id"""
         # Setup
-        mock_get_mail.return_value = "test@email.com"
+        email = "test@email.com"
+        mock_get_mail.return_value = email
         
         mock_cursor = Mock()
         mock_cursor.fetchone.return_value = {"session_id": None}
@@ -181,7 +184,7 @@ class TestLoginServiceEdgeCases:
         mock_connection.return_value = mock_conn
         
         # Execute
-        result = login_service("test@email.com")
+        result = login_service(email)
         
         # Assert
         assert result is None
@@ -201,17 +204,15 @@ def test_login_service_various_emails(email_input, get_mail_result, expected):
         
         mock_get_mail.return_value = get_mail_result
 
-        # Mock connection dan cursor supaya tidak connect ke MySQL asli
         mock_cursor = MagicMock()
         mock_conn.return_value.cursor.return_value = mock_cursor
-        # FIXED: Return session_id (yang berisi email), bukan kolom email
+        # FIXED: session_id berisi email
         mock_cursor.fetchone.return_value = {"session_id": get_mail_result} if get_mail_result else None
 
         result = login_service(email_input)
         assert (result is not False) == expected
 
 
-# Integration-style test dengan mock yang lebih realistic
 class TestLoginServiceIntegration:
     """Test dengan scenario yang lebih realistic"""
     
@@ -227,7 +228,7 @@ class TestLoginServiceIntegration:
         
         # Mock database response
         mock_cursor = Mock()
-        # FIXED: Return email yang sama karena session_id berisi email
+        # FIXED: session_id berisi EMAIL, bukan random string
         mock_cursor.fetchone.return_value = {"session_id": validated_email}
         
         mock_conn = Mock()
@@ -238,7 +239,7 @@ class TestLoginServiceIntegration:
         result = login_service(email)
         
         # Assert complete flow
-        # FIXED: Expect email karena session_id = email
+        # FIXED: Expect EMAIL, bukan random session ID
         assert result == validated_email
         
         # Verify call sequence

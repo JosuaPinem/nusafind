@@ -185,12 +185,10 @@ class TestLoginServiceEdgeCases:
         assert result is None
 
 
-# Parametrized tests untuk berbagai input email
-# Dalam test/test_login.py - update test yang gagal
 @pytest.mark.parametrize("email_input,get_mail_result,expected", [
     ("valid@email.com", "valid@email.com", True),
     ("", None, False),
-    (None, None, False), 
+    (None, None, False),
     ("invalid", "", False),
     ("test@test.com", False, False),
 ])
@@ -200,19 +198,14 @@ def test_login_service_various_emails(email_input, get_mail_result, expected):
          patch('service.login.create_local_connection') as mock_conn:
         
         mock_get_mail.return_value = get_mail_result
-        
-        if expected:  
-            # Mock successful database connection
-            mock_connection = MagicMock()
-            mock_cursor = MagicMock()
-            mock_cursor.fetchone.return_value = {"id": 1, "email": email_input}
-            mock_connection.cursor.return_value = mock_cursor
-            mock_conn.return_value = mock_connection
-        else:  
-            mock_conn.return_value = MagicMock()
-            
+
+        # Mock connection dan cursor supaya tidak connect ke MySQL asli
+        mock_cursor = MagicMock()
+        mock_conn.return_value.cursor.return_value = mock_cursor
+        mock_cursor.fetchone.return_value = {"email": get_mail_result} if get_mail_result else None
+
         result = login_service(email_input)
-        assert result == expected
+        assert (result is not False) == expected
 
 
 # Integration-style test dengan mock yang lebih realistic

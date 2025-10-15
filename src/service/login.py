@@ -1,5 +1,5 @@
-from db.connection import create_connection, create_local_connection
-from model.model import getMail
+from src.db.connection import create_connection, create_local_connection
+from src.model.model import getMail
 import mysql.connector
 from flask import jsonify, request, Flask
 

@@ -218,11 +218,11 @@
                         <div class="chart-controls">
                             <label><i class="fas fa-chart-bar"></i> Pilih Visualisasi:</label>
                             ${chartTypes.map(t => `
-                            <button class="chart-type-btn ${t === (visualisasi.chartType || 'bar') ? 'active' : ''}"
-                                    data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
-                                <i class="fas ${chartIcons[t]}"></i>
-                                ${t.charAt(0).toUpperCase() + t.slice(1)}
-                            </button>
+                                <button class="chart-type-btn ${t === (chartConfig?.chartType || 'bar') ? 'active' : ''}"
+                                        data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
+                                    <i class="fas ${chartIcons[t]}"></i>
+                                    ${t.charAt(0).toUpperCase() + t.slice(1)}
+                                </button>
                             `).join('')}
                             <button class="download-btn" onclick="downloadChart('${chartId}')">
                             <i class="fas fa-download"></i> Download PNG
@@ -552,11 +552,11 @@
                 <div class="chart-controls">
                     <label><i class="fas fa-chart-bar"></i> Pilih Visualisasi:</label>
                     ${chartTypes.map(t => `
-                    <button class="chart-type-btn ${t === (visualisasi.chartType || 'bar') ? 'active' : ''}"
-                            data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
-                        <i class="fas ${chartIcons[t]}"></i>
-                        ${t.charAt(0).toUpperCase() + t.slice(1)}
-                    </button>
+                        <button class="chart-type-btn ${t === (chartConfig?.chartType || 'bar') ? 'active' : ''}"
+                                data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
+                            <i class="fas ${chartIcons[t]}"></i>
+                            ${t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
                     `).join('')}
                     <button class="download-btn" onclick="downloadChart('${chartId}')">
                     <i class="fas fa-download"></i> Download PNG

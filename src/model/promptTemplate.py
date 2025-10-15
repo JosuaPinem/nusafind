@@ -95,3 +95,28 @@ promptFQ = PromptTemplate.from_template(
         adapun pesaanya adalah : {question}
     """
 )
+
+promptVis = PromptTemplate.from_template(
+    '''
+        Kamu adalah seorang asisten yang membantu membuat konfigurasi chart dari data yang diberikan.
+        Berdasarkan data berikut: {data}, buatlah konfigurasi chart dalam format JSON dengan struktur berikut:
+        {{
+            "chartType": "bar" | "line" | "pie" | "doughnut" | "radar" | "scatter",  // Jenis chart
+            "title": "Judul Chart",  // Judul chart
+            "xKey": "nama_kolom_x",  // Nama kolom untuk sumbu X
+            "yKey": "nama_kolom_y",  // Nama kolom untuk sumbu Y
+            "data": [  // Data untuk chart
+                {{"nama_kolom_x": "nilai1", "nama_kolom_y": nilai1}},
+                {{"nama_kolom_x": "nilai2", "nama_kolom_y": nilai2}},
+                ...
+            ]   
+        }}
+
+        Pastikan yang kamu kirimkan hanya JSON sesuai format diatas.
+        Ingat ya tidak perlu memberikan atau menambahkan penjelasan, cukup membuat konfigurasi chart dalam format JSON sesuai instruksi diatas.
+        Jika data ada memberikan nilai berupa angka dalam bentuk string, ubah menjadi number (tanpa tanda kutip).
+        Ingat bahwa nilai yang diterima boleh int atau float.
+        PENTING: untuk data, khususnya untuk kolom y, tidak wajib singel. Jika terdapat banyak kolom y, buatlah menjadi array of object.
+        PENTING: Kamu tidak boleh memberikan jawaban yang memiliki kuitasi atau tanda ``` apapun.
+    '''
+)

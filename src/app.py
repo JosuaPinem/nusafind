@@ -54,10 +54,10 @@ def ask():
     if check is None:
         return jsonify({"error": "Invalid input"}), 400
     question = body['question']
-    answer, query = a.ask_service(question, session_id)
+    answer, query, chartConfig = a.ask_service(question, session_id)
     if answer is None:
         return jsonify({"error": "Failed to get answer"}), 500
-    return jsonify({"answer": answer, "query":query}), 200
+    return jsonify({"answer": answer, "query":query, "chartConfig": chartConfig}), 200
 
 @app.route("/login", methods=["POST"])
 def login():

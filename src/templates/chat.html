@@ -10,7 +10,7 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename=('/css/chat.css'))}}">
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -79,6 +79,8 @@
 
         // Storage untuk SQL queries dari server - dinamis
         let sqlQueriesStorage = {};
+        let chartInstances = {};
+        let chartDataStorage = {};
 
         // Get current time in HH:MM format
         function getCurrentTime() {
@@ -151,18 +153,91 @@
         }
 
         // Modified addMessageHistory to support SQL queries from server
-        function addMessageHistory(text, type, time, sqlQuery = null) {
+        function addMessageHistory(text, type, time, sqlQuery = null, visualisasi = null) {
             const chatArea = document.getElementById('chatArea');
             const emptyState = document.getElementById('emptyState');
-            // Hide empty state on first message
-            if (messageCount === 0) {
-                emptyState.style.display = 'none';
-            }
+
+            if (messageCount === 0 && emptyState) emptyState.style.display = 'none';
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            
-            // Store SQL query dan create bubble jika ada
+
+            // --- 🧠 Chart visualization logic (copied & adapted from addMessage)
+            let chartHtml = '';
+            let chartId = null;
+
+            if (visualisasi) {
+                // Normalize if string
+                if (typeof visualisasi === 'string') {
+                    try { visualisasi = JSON.parse(visualisasi); }
+                    catch (err) { console.error('Invalid visualisasi JSON:', err); visualisasi = null; }
+                }
+
+                if (visualisasi && Array.isArray(visualisasi.data) && visualisasi.data.length > 0) {
+                    chartId = 'chart_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+                    const labels = visualisasi.data.map(item => String(item[visualisasi.xKey] ?? ''));
+
+                    let chartPayload;
+                    if (Array.isArray(visualisasi.yKey)) {
+                        const datasets = visualisasi.yKey.map(key => ({
+                            label: key,
+                            data: visualisasi.data.map(item => parseNumericValue(item[key]))
+                        }));
+                        chartPayload = {
+                            labels,
+                            datasets,
+                            title: visualisasi.title || visualisasi.yKey.join(', ')
+                        };
+                    } else {
+                        const dataSeries = visualisasi.data.map(item => parseNumericValue(item[visualisasi.yKey]));
+                        chartPayload = {
+                            labels,
+                            data: dataSeries,
+                            title: visualisasi.title || visualisasi.yKey || 'Data'
+                        };
+                    }
+
+                    chartDataStorage[chartId] = chartPayload;
+
+                    const chartIcons = {
+                        bar: 'fa-chart-bar',
+                        line: 'fa-chart-line',
+                        pie: 'fa-chart-pie',
+                        doughnut: 'fa-circle-half-stroke',
+                        radar: 'fa-circle-nodes',
+                        polarArea: 'fa-bullseye',
+                        scatter: 'fa-braille',
+                        bubble: 'fa-circle-dot',
+                        mixed: 'fa-layer-group'
+                    };
+
+                    const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter', 'bubble'];
+
+                    chartHtml = `
+                        <div class="chart-controls">
+                            <label><i class="fas fa-chart-bar"></i> Pilih Visualisasi:</label>
+                            ${chartTypes.map(t => `
+                            <button class="chart-type-btn ${t === (visualisasi.chartType || 'bar') ? 'active' : ''}"
+                                    data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
+                                <i class="fas ${chartIcons[t]}"></i>
+                                ${t.charAt(0).toUpperCase() + t.slice(1)}
+                            </button>
+                            `).join('')}
+                            <button class="download-btn" onclick="downloadChart('${chartId}')">
+                            <i class="fas fa-download"></i> Download PNG
+                            </button>
+                        </div>
+                        <div class="chart-container">
+                                        <canvas id="${chartId}"></canvas>
+                        </div>
+
+                    `;
+
+                }
+            }
+
+            // --- 🧱 SQL query bubble (kept from your original)
             let sqlBubble = '';
             if (sqlQuery && sqlQuery.trim() !== '') {
                 const sqlId = storeSqlQuery(sqlQuery);
@@ -174,25 +249,35 @@
                     `;
                 }
             }
-            
+
+            // --- 💬 Message bubble structure
             messageDiv.innerHTML = `
-                <div class="message-bubble" 
-                    style="overflow-x:auto; width:100%; display:flex; flex-direction:column; align-items:flex-start;">
+                <div class="message-bubble" style="overflow-x:auto; width:100%; display:flex; flex-direction:column; align-items:flex-start;">
                     <div class="bubble-text" style="align-self:stretch;">
                         ${text}
+                        ${chartHtml}
                     </div>
                     <div class="sql-bubble-wrapper" style="align-self:flex-end; margin-top:0.5rem;">
                         ${sqlBubble}
                     </div>
                 </div>
                 <div class="message-time">${time}</div>
-                
             `;
 
             chatArea.appendChild(messageDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
             messageCount++;
+
+            // --- 🎨 Create chart after DOM render
+            if (chartId && chartDataStorage[chartId]) {
+                setTimeout(() => {
+                    const initialChartType = (visualisasi && visualisasi.chartType) ? visualisasi.chartType : 'bar';
+                    createChart(chartId, chartDataStorage[chartId], initialChartType);
+                    console.log('Restored chart', chartId, chartDataStorage[chartId]);
+                }, 150);
+            }
         }
+
 
         // Mengambil data yang sudah di-render dari Flask ke dalam JavaScript
         let chatHis = {{ hisChat | tojson }};
@@ -206,7 +291,7 @@
                 addMessageHistory(`${chat.question}`, 'user', `${chat.time}`);
                 // Pass SQL query dari server untuk system message
                 const sqlQuery = chat.query || null;
-                addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`, sqlQuery);
+                addMessageHistory(`${chat.respons}`, 'system', `${chat.time}`, sqlQuery, `${chat.visualisasi}`); // Pass visualisasi
             });
             hideTyping();  // Menyembunyikan indikator mengetik setelah chat diproses
         } else {
@@ -214,42 +299,314 @@
             hideTyping();  // Menyembunyikan indikator mengetik jika tidak ada riwayat chat
         }
 
-        // Modified addMessage to support SQL queries from server
-        function addMessage(text, type, sqlQuery = null) {
+        
+        function extractTableData(tableHtml) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(tableHtml, 'text/html');
+            const table = doc.querySelector('table');
+            
+            if (!table) return null;
+            
+            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim());
+            const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr => {
+                return Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+            });
+            
+            return { headers, rows };
+        }
+
+        // Parse numeric value (handle Rp. format)
+        function parseNumericValue(value) {
+            if (typeof value === 'number') return value;
+            if (typeof value !== 'string') return 0;
+            
+            // Remove Rp., dots, and commas
+            const cleaned = value.replace(/Rp\.?\s*/g, '').replace(/\./g, '').replace(/,/g, '.');
+            const num = parseFloat(cleaned);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // Format number to Indonesian format
+        function formatNumber(num) {
+            return new Intl.NumberFormat('id-ID').format(num);
+        }
+
+        function createChart(canvasId, chartData, chartType = 'bar') {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+
+            // pastikan container punya ukuran (CSS akan mengatur height)
+            canvas.style.width = '100%';
+
+            const ctx = canvas.getContext('2d');
+
+            // Destroy previous instance
+            if (chartInstances[canvasId]) {
+                try { chartInstances[canvasId].destroy(); } 
+                catch (e) { console.warn('Error destroying chart:', canvasId, e); }
+                delete chartInstances[canvasId];
+            }
+
+            // Build datasets
+            let datasets = [];
+            if (Array.isArray(chartData.datasets) && chartData.datasets.length > 0) {
+                datasets = chartData.datasets.map((ds, idx) => {
+                    const parsedData = Array.isArray(ds.data) ? ds.data.map(v => parseNumericValue(v)) : [];
+                    if (chartType === 'pie' || chartType === 'doughnut') {
+                        return {
+                            label: ds.label || `Series ${idx+1}`,
+                            data: parsedData,
+                            backgroundColor: generateColors(parsedData.length),
+                            borderColor: parsedData.map(() => getColor(idx).replace(/0\.8\)$/, '1)')),
+                            borderWidth: 1
+                        };
+                    }
+                    return {
+                        label: ds.label || `Series ${idx+1}`,
+                        data: parsedData,
+                        backgroundColor: getColor(idx),
+                        borderColor: getColor(idx).replace(/0\.8\)$/, '1)'),
+                        borderWidth: 2
+                    };
+                });
+            } else {
+                // single-series support (chartData.data)
+                const singleData = Array.isArray(chartData.data) ? chartData.data.map(v => parseNumericValue(v)) : [];
+                datasets = [{
+                    label: chartData.title || 'Data',
+                    data: singleData,
+                    backgroundColor: (chartType === 'pie' || chartType === 'doughnut') ? generateColors(singleData.length) : 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2
+                }];
+            }
+
+            const config = {
+                type: chartType,
+                data: {
+                    labels: chartData.labels || [],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // respect CSS height
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    const val = (context.parsed && typeof context.parsed === 'object') ? (context.parsed.y ?? context.parsed) : context.parsed;
+                                    label += 'Rp. ' + formatNumber(Number(val || 0));
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: (chartType !== 'pie' && chartType !== 'doughnut') ? {
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 30,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    return label && label.length > 25 ? label.slice(0, 25) + '…' : label;
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp. ' + formatNumber(value);
+                                }
+                            }
+                        }
+                    } : {}
+                }
+            };
+
+            const chart = new Chart(ctx, config);
+            chartInstances[canvasId] = chart;
+            return chart;
+        }
+
+
+        function getColor(idx) {
+        const palette = [
+            'rgba(0, 135, 68, 0.85)',   // deep green
+            'rgba(34, 170, 93, 0.85)',  // bright green
+            'rgba(0, 153, 204, 0.85)',  // blue-cyan
+            'rgba(32, 126, 202, 0.85)', // deep blue
+            'rgba(14, 102, 185, 0.85)', // dark blue
+            'rgba(102, 204, 153, 0.85)',// light green
+            'rgba(0, 102, 153, 0.85)',  // ocean blue
+            'rgba(0, 180, 135, 0.85)'   // teal
+        ];
+        return palette[idx % palette.length];
+        }
+
+        function generateColors(count) {
+        const palette = [
+            'rgba(0, 135, 68, 0.85)',
+            'rgba(34, 170, 93, 0.85)',
+            'rgba(0, 153, 204, 0.85)',
+            'rgba(32, 126, 202, 0.85)',
+            'rgba(14, 102, 185, 0.85)',
+            'rgba(102, 204, 153, 0.85)',
+            'rgba(0, 102, 153, 0.85)',
+            'rgba(0, 180, 135, 0.85)'
+        ];
+        const result = [];
+        for (let i = 0; i < count; i++) {
+            result.push(palette[i % palette.length]);
+        }
+        return result;
+        }
+
+
+
+        // Change chart type
+        function changeChartType(chartId, newType) {
+            if (!chartDataStorage[chartId]) return;
+            
+            const chartData = chartDataStorage[chartId];
+            createChart(chartId, chartData, newType);
+            
+            // Update active button
+            const container = document.getElementById(chartId).closest('.message-bubble');
+            const buttons = container.querySelectorAll('.chart-type-btn');
+            buttons.forEach(btn => {
+                if (btn.dataset.type === newType) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function addMessage(text, type, sqlQuery = null, chartConfig = null) {
             const chatArea = document.getElementById('chatArea');
             const emptyState = document.getElementById('emptyState');
-            // Hide empty state on first message
-            if (messageCount === 0) {
-                emptyState.style.display = 'none';
-            }
+
+            if (messageCount === 0 && emptyState) emptyState.style.display = 'none';
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            
-            // Store SQL query dan create bubble jika ada
+
+            let chartHtml = '';
+            let chartId = null;
+
+            // Normalize chartConfig if string
+            if (chartConfig) {
+                if (typeof chartConfig === 'string') {
+                    try { chartConfig = JSON.parse(chartConfig); }
+                    catch (err) { console.error('Invalid chartConfig JSON:', err); chartConfig = null; }
+                }
+            }
+
+            // Build chart payload only if valid
+            if (chartConfig && Array.isArray(chartConfig.data) && chartConfig.data.length > 0) {
+                chartId = 'chart_' + Date.now();
+
+                const labels = chartConfig.data.map(item => String(item[chartConfig.xKey] ?? ''));
+
+                let chartPayload;
+                if (Array.isArray(chartConfig.yKey)) {
+                    const yKeys = chartConfig.yKey;
+                    const datasets = yKeys.map((key, idx) => ({
+                        label: key,
+                        data: chartConfig.data.map(item => parseNumericValue(item[key]))
+                    }));
+                    chartPayload = {
+                        labels,
+                        datasets,
+                        title: chartConfig.title || yKeys.join(', ')
+                    };
+                } else {
+                    const dataSeries = chartConfig.data.map(item => parseNumericValue(item[chartConfig.yKey]));
+                    chartPayload = {
+                        labels,
+                        data: dataSeries,
+                        title: chartConfig.title || chartConfig.yKey || 'Data'
+                    };
+                }
+
+                chartDataStorage[chartId] = chartPayload;
+                const chartIcons = {
+                    bar: 'fa-chart-bar',
+                    line: 'fa-chart-line',
+                    pie: 'fa-chart-pie',
+                    doughnut: 'fa-circle-half-stroke',
+                    radar: 'fa-circle-nodes',
+                    polarArea: 'fa-bullseye',
+                    scatter: 'fa-braille',
+                    bubble: 'fa-circle-dot',
+                    mixed: 'fa-layer-group'
+                };
+
+                const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea', 'scatter', 'bubble'];
+
+                chartHtml = `
+                <div class="chart-controls">
+                    <label><i class="fas fa-chart-bar"></i> Pilih Visualisasi:</label>
+                    ${chartTypes.map(t => `
+                    <button class="chart-type-btn ${t === (visualisasi.chartType || 'bar') ? 'active' : ''}"
+                            data-type="${t}" onclick="changeChartType('${chartId}', '${t}')">
+                        <i class="fas ${chartIcons[t]}"></i>
+                        ${t.charAt(0).toUpperCase() + t.slice(1)}
+                    </button>
+                    `).join('')}
+                    <button class="download-btn" onclick="downloadChart('${chartId}')">
+                    <i class="fas fa-download"></i> Download PNG
+                    </button>
+                </div>
+                <div class="chart-container">
+                                        <canvas id="${chartId}"></canvas>
+                        </div>
+                `;
+
+            }
+
+            // SQL bubble (kept existing behavior)
             let sqlBubble = '';
-            if (sqlQuery && sqlQuery.trim() !== '') {
+            if (sqlQuery && typeof sqlQuery === 'string' && sqlQuery.trim() !== '') {
                 const sqlId = storeSqlQuery(sqlQuery);
                 if (sqlId) {
                     sqlBubble = `
-                        <div class="sql-query-bubble" onclick="showSqlModal('${sqlId}')">
-                            <i class="fas fa-code"></i>
+                        <div class="sql-bubble-wrapper" style="width:100%; display:flex; justify-content:flex-end; margin-top:0.5rem;">
+                            <div class="sql-query-bubble" onclick="showSqlModal('${sqlId}')">
+                                <i class="fas fa-code"></i>
+                            </div>
                         </div>
                     `;
-                    console.log('SQL Bubble akan ditampilkan untuk query:', sqlQuery);
                 }
             }
-            
+
             messageDiv.innerHTML = `
-                <div class="message-bubble" style="overflow-x: auto; width: 100%;">${text}</div>
+                <div class="message-bubble" style="overflow-x: auto; width: 100%; max-width: 100%;">
+                    ${text}
+                    ${chartHtml}
+                    ${sqlBubble}
+                </div>
                 <div class="message-time">${getCurrentTime()}</div>
-                ${sqlBubble}
             `;
 
             chatArea.appendChild(messageDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
             messageCount++;
+
+            // Create chart after DOM update
+            if (chartId && chartDataStorage[chartId]) {
+                setTimeout(() => {
+                    const initialChartType = (chartConfig && chartConfig.chartType) ? chartConfig.chartType : 'bar';
+                    createChart(chartId, chartDataStorage[chartId], initialChartType);
+                    console.log('Created chart', chartId, chartDataStorage[chartId]);
+                }, 150);
+            }
         }
+
         // Show SQL modal
         function showSqlModal(sqlId) {
             const modal = document.getElementById('sqlModal');
@@ -481,21 +838,25 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Backend response:', data); // Debug
+                console.log('Backend response:', data);
                 
                 // Get SQL query from server response
                 const sqlQuery = data.query || null;
                 
-                console.log('Received SQL query from server:', sqlQuery); // Debug
+                // Get chartConfig from server response - INI YANG BARU!
+                const chartConfig = data.chartConfig || null;
                 
-                // Add message dengan SQL query jika ada
-                addMessage(data.answer, 'system', sqlQuery);
+                console.log('Received SQL query from server:', sqlQuery);
+                console.log('Received chartConfig from server:', chartConfig);
+                
+                // Add message dengan SQL query dan chartConfig jika ada - GANTI FUNGSI!
+                addMessage(data.answer, 'system', sqlQuery, chartConfig);
             })
             .catch(error => {
                 console.error('Error:', error);
                 addMessage("Terjadi kesalahan. Coba lagi.", 'system');
             })
-            .finally(() => resetInput(input, sendBtn)); hideTyping(); // Always reset input after ask
+            .finally(() => resetInput(input, sendBtn)); hideTyping();
         }
 
         function resetInput(input, sendBtn) {
@@ -504,6 +865,17 @@
             sendBtn.disabled = false;
             input.focus();
             hideTyping(); // Hide typing indicator when done
+        }
+
+        function downloadChart(chartId) {
+            const canvas = document.getElementById(chartId);
+            if (!canvas) return;
+
+            const image = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = `${chartId}.png`;
+            link.click();
         }
 
         // Enter key to send

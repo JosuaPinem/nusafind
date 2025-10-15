@@ -609,4 +609,96 @@
                 opacity: 1;
             }
         }
-        
+        .chart-controls {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chart-controls label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* 2. Style untuk tombol chart type (bar, line, pie, doughnut) */
+        .chart-type-btn {
+            border: none;
+            background: rgba(0, 102, 153, 0.1);
+            color: #006699;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chart-type-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .chart-type-btn.active {
+            background: linear-gradient(90deg, #008744 0%, #006699 100%);
+            color: white;
+            font-weight: 600;
+            transform: scale(1.05);
+        }
+
+        /* 3. Style untuk container chart */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+        .chart-error {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+        .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #008744 0%, #006699 100%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 6px rgba(0, 102, 153, 0.3);
+        }
+
+        .download-btn i {
+        font-size: 14px;
+        transition: transform 0.2s ease;
+        }
+
+        .download-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 10px rgba(0, 102, 153, 0.5);
+        }
+
+        .download-btn:hover i {
+        transform: translateY(-1px);
+        }
+
+        .download-btn:active {
+        transform: scale(0.96);
+        background: linear-gradient(90deg, #006699 0%, #008744 100%);
+        }

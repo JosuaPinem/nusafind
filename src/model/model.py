@@ -1,9 +1,9 @@
 from flask import Flask, jsonify
 import mysql.connector
-from db.connection import create_connection, create_local_connection
+from src.db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
-from model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ, promptVis
+from src.model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ, promptVis
 import os, sqlparse, json
 from dotenv import load_dotenv
 load_dotenv()

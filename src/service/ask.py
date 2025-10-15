@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
-from model.model import createQuery, getRawData, createAnswer, fillterQuestion, saveData, isQuery, Vis
-from db.connection import create_local_connection
+from src.model.model import createQuery, getRawData, createAnswer, fillterQuestion, saveData, isQuery, Vis
+from src.db.connection import create_local_connection
 import mysql.connector
 
 class askService:

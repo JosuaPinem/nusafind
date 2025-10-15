@@ -3,8 +3,8 @@ import mysql.connector
 from db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
-from model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ
-import os, sqlparse
+from model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ, promptVis
+import os, sqlparse, json
 from dotenv import load_dotenv
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -83,18 +83,18 @@ def getMail(response):
         return None
     return answer.content.strip()
 
-def saveData(session_id, question, query, rawData, answer):
+def saveData(session_id, question, query, rawData, answer, visualisasion):
     conn = create_local_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO log (session_id, question, query, rawData, respons, time) VALUES (%s, %s, %s, %s, %s, NOW())",
-            (session_id, question, query, str(rawData), answer)
+            "INSERT INTO log (session_id, question, query, rawData, respons, visualisasi, time) VALUES (%s, %s, %s, %s, %s, %s, NOW())",
+            (session_id, question, query, str(rawData), answer, visualisasion)
         )
         conn.commit()
         cursor.execute(
-        "INSERT INTO history (session_id, time, question, respons, query) VALUES (%s, NOW(), %s, %s, %s)",
-            (session_id, question, answer, query)  
+        "INSERT INTO history (session_id, time, question, respons, query, visualisasi) VALUES (%s, NOW(), %s, %s, %s, %s)",
+            (session_id, question, answer, query, visualisasion)  
         )
         conn.commit()
         return True
@@ -111,6 +111,18 @@ def isQuery(question):
     answer = llm.invoke(reformat)
     return answer.content
 
+def Vis(data):
+    reformat = promptVis.format(data = data)
+
+    answer = llm.invoke(reformat)
+    try:
+        # Coba parse string JSON dari GPT
+        parsed = json.loads(answer.content)
+        return parsed, answer.content
+    except json.JSONDecodeError as e:
+        print("⚠️  Gagal parse chartConfig dari GPT:", e)
+        print("Raw content:", answer.content)
+        return None, None
 
 if __name__ == "__main__":
     raw = """```sql

@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request, render_template, session, url_for, redirect
-from src.validation.validation import check_input
-from src.service.ask import askService
-from src.service.login import login_service
-from src.db.connection import create_connection
+from validation.validation import check_input
+from service.ask import askService
+from service.login import login_service
+from db.connection import create_connection
 
 a = askService()
 

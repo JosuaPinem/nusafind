@@ -1,0 +1,704 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        table {
+            min-width: 600px; /* optional: memberi lebar minimum agar kolom tetap readable */
+        }
+        pre.sql-code {
+            white-space: pre;  /* atau pre-wrap jika mau bungkus baris panjang */
+            margin: 0;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+
+        /* Header */
+        .chat-header {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .logo i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .company-name {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .online-status {
+            display: flex;
+            align-items: center;
+            margin-top: 3px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .online-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            font-weight: 400;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            padding: 2rem 1.5rem 1rem;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            max-width: 70%;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* User messages - Sebelah Kanan */
+        .message.user {
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+            color: #2e7d32;
+        }
+
+        .message.user .message-time {
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        /* System messages - Sebelah Kiri */
+        .message.system {
+            align-self: flex-start;
+            margin-right: auto;
+        }
+
+        .message.system .message-bubble {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1565c0;
+        }
+
+        .message.system .message-time {
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+            max-width: 100%;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        .connected {
+            color: green; /* Teks berwarna hijau */
+        }
+
+        .disconnected {
+            color: red; /* Teks berwarna merah */
+        }
+
+        .connected-dot {
+            color: green; /* Titik hijau */
+        }
+
+        .disconnected-dot {
+            color: red; /* Titik merah */
+        }
+
+        /* SQL Query Bubble - Bulatan kecil di bawah message */
+        .sql-query-bubble {
+            width: 32px;
+            height: 32px;
+            background-color:#142F7D;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            margin-left: 1rem;
+            box-shadow: 0 3px 10px rgba(10, 15, 113, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .sql-query-bubble:hover {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 5px 15px rgba(2, 14, 83, 0.4);
+        }
+
+        .sql-query-bubble i {
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        /* Tooltip for SQL bubble */
+        .sql-query-bubble::before {
+            content: 'Lihat Query SQL';
+            position: absolute;
+            top: 50%;
+            right: 120%;                /* geser tooltip ke kiri */
+            transform: translateY(-50%);
+            background: #333;
+            color: white;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .sql-query-bubble::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: calc(100% + 2px);    /* panah nempel ke bubble + jarak 4px */
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: #333;   /* arah panah ke kanan (menghadap bubble) */
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Saat hover tampil */
+        .sql-query-bubble:hover::before,
+        .sql-query-bubble:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+
+        /* Modal Styles untuk SQL Query */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease-out;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background-color: #00008B;
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        #sqlModal .sql-code pre.sql-block {
+            white-space: pre;     /* tampilkan spasi & newline apa adanya */
+            margin: 0;
+            padding: 16px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            tab-size: 2;
+        }
+
+        /* SQL Code Block */
+        .sql-code {
+            background: black;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+
+        /* SQL Syntax Highlighting */
+        .sql-keyword {
+            color: #57ADFF;
+            font-weight: bold;
+        }
+
+        .sql-string {
+            color: #68d391;
+        }
+
+        .sql-comment {
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .sql-function {
+            color: #fbb6ce;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4a5568;
+            border: none;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #2d3748;
+        }
+
+        .copy-btn.copied {
+            background: #38a169;
+        }
+
+        /* Query Info */
+        .query-info {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #00008B;
+        }
+
+        .query-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .query-info p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1rem 1.5rem 1.5rem;
+            background-color: #f5f5f5;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 25px;
+            padding: 0.5rem 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: #29b6f6;
+            box-shadow: 0 4px 25px rgba(41, 182, 246, 0.15);
+        }
+
+        .message-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            background: transparent;
+            color: #333;
+        }
+
+        .message-input::placeholder {
+            color: #999;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #29b6f6 0%, #42a5f5 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+            box-shadow: 0 3px 12px rgba(41, 182, 246, 0.3);
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(41, 182, 246, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button i {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-area {
+                padding: 1rem;
+            }
+            
+            .input-area {
+                padding: 0.75rem 1rem 1rem;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .empty-state p {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            align-self: flex-start;
+            margin-right: auto;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .typing-bubble {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .typing-text {
+            color: #1565c0;
+            font-size: 0.95rem;
+            margin-right: 0.5rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #1565c0;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+        .chart-controls {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chart-controls label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* 2. Style untuk tombol chart type (bar, line, pie, doughnut) */
+        .chart-type-btn {
+            border: none;
+            background: rgba(0, 102, 153, 0.1);
+            color: #006699;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chart-type-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .chart-type-btn.active {
+            background: linear-gradient(90deg, #008744 0%, #006699 100%);
+            color: white;
+            font-weight: 600;
+            transform: scale(1.05);
+        }
+
+        /* 3. Style untuk container chart */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+        .chart-error {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
+        }
+        .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #008744 0%, #006699 100%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 2px 6px rgba(0, 102, 153, 0.3);
+        }
+
+        .download-btn i {
+        font-size: 14px;
+        transition: transform 0.2s ease;
+        }
+
+        .download-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 10px rgba(0, 102, 153, 0.5);
+        }
+
+        .download-btn:hover i {
+        transform: translateY(-1px);
+        }
+
+        .download-btn:active {
+        transform: scale(0.96);
+        background: linear-gradient(90deg, #006699 0%, #008744 100%);
+        }

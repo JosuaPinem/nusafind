@@ -1,0 +1,20 @@
+venv/
+test/
+exp.txt
+__pycache__/
+helper.txt
+.github/
+requirements.txt
+.pytest_cache/
+src/.pytest_cache/
+src/db/__pycache__/
+src/model/__pycache__/
+src/sercvice/__pycache__/
+.DS_Store
+__pycache__/
+*.pyc
+
+# env & IDE
+.env.*
+.vscode/
+.idea/

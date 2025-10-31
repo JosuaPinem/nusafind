@@ -335,19 +335,17 @@
             const canvas = document.getElementById(canvasId);
             if (!canvas) return null;
 
-            // pastikan container punya ukuran (CSS akan mengatur height)
             canvas.style.width = '100%';
-
             const ctx = canvas.getContext('2d');
 
-            // Destroy previous instance
             if (chartInstances[canvasId]) {
                 try { chartInstances[canvasId].destroy(); } 
                 catch (e) { console.warn('Error destroying chart:', canvasId, e); }
                 delete chartInstances[canvasId];
             }
 
-            // Build datasets
+            const dataType = (chartData.type || '').toLowerCase(); // bisa "rupiah" / "bukan rupiah" / "bytes" / dll
+
             let datasets = [];
             if (Array.isArray(chartData.datasets) && chartData.datasets.length > 0) {
                 datasets = chartData.datasets.map((ds, idx) => {
@@ -370,16 +368,34 @@
                     };
                 });
             } else {
-                // single-series support (chartData.data)
                 const singleData = Array.isArray(chartData.data) ? chartData.data.map(v => parseNumericValue(v)) : [];
                 datasets = [{
                     label: chartData.title || 'Data',
                     data: singleData,
-                    backgroundColor: (chartType === 'pie' || chartType === 'doughnut') ? generateColors(singleData.length) : 'rgba(102, 126, 234, 0.8)',
+                    backgroundColor: (chartType === 'pie' || chartType === 'doughnut')
+                        ? generateColors(singleData.length)
+                        : 'rgba(102, 126, 234, 0.8)',
                     borderColor: 'rgba(102, 126, 234, 1)',
                     borderWidth: 2
                 }];
             }
+
+            // ✅ format value sesuai tipe
+            const formatValue = (val) => {
+                if (dataType === 'rupiah') {
+                    return 'Rp. ' + formatNumber(val);
+                } else if (dataType === 'bytes') {
+                    const units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    let i = 0;
+                    while (val >= 1024 && i < units.length - 1) {
+                        val /= 1024;
+                        i++;
+                    }
+                    return val.toFixed(2) + ' ' + units[i];
+                } else {
+                    return formatNumber(val); // angka biasa tanpa Rp
+                }
+            };
 
             const config = {
                 type: chartType,
@@ -389,7 +405,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // respect CSS height
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true, position: 'bottom' },
                         tooltip: {
@@ -397,9 +413,10 @@
                                 label: function(context) {
                                     let label = context.dataset.label || '';
                                     if (label) label += ': ';
-                                    const val = (context.parsed && typeof context.parsed === 'object') ? (context.parsed.y ?? context.parsed) : context.parsed;
-                                    label += 'Rp. ' + formatNumber(Number(val || 0));
-                                    return label;
+                                    const val = (context.parsed && typeof context.parsed === 'object')
+                                        ? (context.parsed.y ?? context.parsed)
+                                        : context.parsed;
+                                    return label + formatValue(Number(val || 0)); // ✅ gunakan formatValue
                                 }
                             }
                         }
@@ -419,7 +436,7 @@
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return 'Rp. ' + formatNumber(value);
+                                    return formatValue(value); // ✅ gunakan formatValue di axis
                                 }
                             }
                         }
@@ -431,7 +448,6 @@
             chartInstances[canvasId] = chart;
             return chart;
         }
-
 
         function getColor(idx) {
         const palette = [

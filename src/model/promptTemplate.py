@@ -10,6 +10,7 @@ promptConvertQuery =  PromptTemplate.from_template(
         -service_internet
         -service_digital_business
         -invoice
+        -internet_usage
 
         Dalam tabel service_internet, terdapat kolom-kolom berikut:
         csid, cid, branch, account_name, status_code, status, date_registered, date_activated, date_blocked, date_blocked_until, date_terminated, is_free, is_blocked, service_type,
@@ -22,7 +23,11 @@ promptConvertQuery =  PromptTemplate.from_template(
         Dalam tabel invoice, terdapat kolom-kolom berikut:
         cid, csid, description, created_at, amount, paid
 
-        pada tabel diatas, table service_internet dan service_digital_business memiliki relasi dengan tabel invoice melalui kolom csid dan cid dan akan mengambil data dari service_price untuk data amount pada tabel invoice namun perlu diingat terdapat penambahan tax.
+        Dalam tabel internet_usage, terdapat kolom:
+        csid, date, dan bytes
+
+        pada tabel service_internet dan service_digital_business memiliki relasi dengan tabel invoice melalui kolom csid dan cid dan akan mengambil data dari service_price untuk data amount pada tabel invoice namun perlu diingat terdapat penambahan tax.
+        pada tabel service_internet dan internate_usage memiliki relasi tabel yaitu csid yang dimana ini tujuannya mendapatkan informasi jumlah penggunaan bytes internet.
         dan semua tabel sudah terelasi dengan baik. Tidak ada yang perlu diubah dari struktur tabel tersebut. Dan ingat setiap ada kata price dan amount itu satuannya rupiah.
 
         adapun pertanyaan yang diberikan adalah: {question}
@@ -74,6 +79,9 @@ promptFilter = PromptTemplate.from_template(
         Dalam tabel invoice, terdapat kolom-kolom berikut:
         cid, csid, description, created_at, amount, paid
 
+        Dalam tabel internet_usage, terdapat kolom:
+        csid, date, dan bytes
+
         Jika memungkinkan, anda hanya perlu merespon dengan "True" jika tidak, anda hanya perlu merespon dengan "False".
         Jangan memberikan jawaban apapun selain "True" atau "False". karena akan mengganggy proses selanjutnya.
     """
@@ -109,7 +117,8 @@ promptVis = PromptTemplate.from_template(
                 {{"nama_kolom_x": "nilai1", "nama_kolom_y": nilai1}},
                 {{"nama_kolom_x": "nilai2", "nama_kolom_y": nilai2}},
                 ...
-            ]   
+            ],
+            "type": kamu tentukan tipe untuk kolom y yaitu "Rupiah" atau "Bukan Rupiah" atau "Bytes"
         }}
 
         Pastikan yang kamu kirimkan hanya JSON sesuai format diatas.

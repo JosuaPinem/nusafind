@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request, render_template, session, url_for, redirect
 from validation.validation import check_input
 from service.ask import askService
-from service.login import login_service
+from service.admin import addUsers, deleteUsers
+from service.login import login_service, login_admin, dataUser
 from db.connection import create_connection
 
 a = askService()
@@ -45,6 +46,25 @@ def home():
     connecions = "success"
     return render_template("chat.html", isLogin=False, session_id=None, connection=connecions, hisChat=None)
 
+@app.route("/admin", methods=["GET"])
+def admin():
+    # Cek apakah sudah login
+    if session['role'] != "admin":
+        return redirect(url_for('home'))
+
+    # Ambil data user / data dashboard
+    data = dataUser()  # fungsi ini kamu sudah punya
+
+    if data is None:
+        # Terserah mau apa: tampilkan error atau halaman kosong
+        return render_template("admin.html", data=None, error="Data tidak dapat ditemukan")
+
+    # Kirim data ke template
+    return render_template(
+        "admin.html",
+        data=data,
+        session_id=session["session_id"]
+    )
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -71,6 +91,7 @@ def login():
         return jsonify({"error": "Maaf Anda tidak terdaftar!", "isLogin": False, "session_id": None}), 200
 
     session['session_id'] = answer
+    session['role'] = 'user'
     getHistory = a.getChatHis(session['session_id'])
 
     # Konversi timedelta ke string atau detik
@@ -87,6 +108,99 @@ def login():
         "hisChat": getHistory,  # Kirim riwayat chat dengan time yang sudah diubah
         'sql_key': "data_pelanggan"
     }), 200
+
+@app.route("/login-admin", methods=['POST'])
+def login_admin_route():
+    body = request.get_json()
+
+    # validasi input
+    if not body or 'email' not in body or 'password' not in body:
+        return jsonify({
+            "error": "Input tidak valid",
+            "isLogin": False
+        }), 400
+
+    email = body['email']
+    password = body['password']
+
+    # cek ke DB
+    if not login_admin(email, password):
+        return jsonify({
+            "error": "Maaf Anda tidak terdaftar!",
+            "isLogin": False,
+            "session_id": None
+        }), 200
+
+    # set session jika berhasil
+    session['session_id'] = email
+    session['role'] = 'admin'
+
+    # kalau mau ambil data user
+    data = dataUser()  # pastikan fungsi ini ada & mengembalikan dict / list
+    if data is None:
+        return jsonify({
+            "error": "Data tidak dapat ditemukan!",
+            "isLogin": False
+        }), 404
+
+    # kirim response JSON, frontend yang redirect
+    return jsonify({
+        "message": "Login berhasil",
+        "isLogin": True,
+        "session_id": session['session_id'],
+        "redirect": "/admin",   # sesuaikan jika beda
+        "data": data            # kalau mau kirim datanya juga
+    }), 200
+
+@app.route("/add-user", methods=["POST"])
+def add_user():
+    body = request.get_json()
+
+    if not body or "email" not in body or not body["email"]:
+        return jsonify({
+            "ok": False,
+            "error": "Pastikan email valid!"
+        }), 400
+
+    email = body["email"]
+
+    if addUsers(email):
+        return jsonify({
+            "ok": True,
+            "email": email,
+            "message": "User berhasil ditambahkan"
+        }), 200
+    else:
+        return jsonify({
+            "ok": False,
+            "error": "Gagal menambahkan user"
+        }), 500
+
+@app.route("/delete-user", methods=["POST"])
+def delete_user():
+    body = request.get_json()
+
+    if not body or "email" not in body or not body["email"]:
+        return jsonify({
+            "ok": False,
+            "error": "Pastikan email valid!"
+        }), 400
+
+    email = body["email"]
+
+    if deleteUsers(email):
+        return jsonify({
+            "ok": True,
+            "email": email,
+            "message": "User berhasil dihapus"
+        }), 200
+    else:
+        return jsonify({
+            "ok": False,
+            "error": "Gagal menghapus user"
+        }), 500
+
+
 
 # Fungsi untuk mengonversi timedelta ke string (HH:MM:SS)
 def timedelta_to_string(timedelta_obj):

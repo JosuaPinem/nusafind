@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <title>Admin – PT Media Antar Nusa (Nusanet)</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons (untuk ikon pesawat & close) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .chat-wrapper {
+            min-height: 100vh;
+        }
+
+        .chat-header {
+            background-color: #bdefff; /* mirip biru muda di screenshot */
+        }
+
+        .logo-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .chat-body {
+            background-color: #f2f2f2;
+        }
+
+        .email-pill {
+            max-width: 360px;
+            background-color: #7bb86c; /* hijau seperti bubble */
+            border-radius: 20px;
+        }
+
+        .email-pill-text {
+            font-size: 1rem;
+        }
+
+        .chat-input-container {
+            background-color: #bdefff;
+        }
+
+        .chat-input-inner {
+            background-color: #ffffff;
+            border-radius: 999px;
+        }
+
+        .chat-input-inner input {
+            border: none;
+            box-shadow: none;
+        }
+
+        .chat-input-inner input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .send-btn {
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-wrapper d-flex flex-column">
+
+    <!-- HEADER -->
+    <header class="chat-header py-2 px-3 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <div class="logo-circle me-3 d-flex align-items-center justify-content-center">
+            <span class="fw-bold text-primary">N</span>
+        </div>
+        <div>
+            <div class="fw-semibold">PT Media Antar Nusa (Nusanet)</div>
+            <small class="text-success">
+                <span class="status-dot bg-success"></span>
+                Online
+            </small>
+        </div>
+    </div>
+
+    <!-- Tombol Logout -->
+    <a href="/reset" class="btn btn-danger btn-sm">
+        <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+</header>
+
+
+    <!-- BODY (daftar email user) -->
+    <main class="chat-body flex-grow-1 p-3">
+    <div class="container-fluid">
+
+        <div class="d-flex flex-wrap gap-3" id="emailList">
+            {% if data %}
+                {% for user in data %}
+                    <div class="email-wrapper mb-2" data-email="{{ user.session_id }}">
+                        <div class="email-pill px-4 py-2 d-flex align-items-center text-white shadow-sm">
+                            <span class="flex-grow-1 email-pill-text">
+                                {{ user.session_id }}
+                            </span>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-link text-white text-decoration-none ms-3 p-0"
+                                    data-email="{{ user.session_id }}">
+                                <i class="bi bi-x-octagon-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Belum ada email user.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</main>
+
+
+    <!-- INPUT BAR -->
+    <footer class="chat-input-container px-3 py-3">
+        <div class="container-fluid">
+            <form id="addEmailForm" class="d-flex align-items-center">
+                <div class="chat-input-inner d-flex flex-grow-1 align-items-center px-4 py-2">
+                    <input type="email"
+                           class="form-control bg-transparent"
+                           id="newEmailInput"
+                           placeholder="Tambah email user"
+                           required>
+                </div>
+                <button type="submit" class="btn btn-light send-btn ms-3 shadow-sm">
+                    <i class="bi bi-send-fill fs-4 text-primary"></i>
+                </button>
+            </form>
+        </div>
+    </footer>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const emailListEl = document.getElementById('emailList');
+    const addEmailForm = document.getElementById('addEmailForm');
+    const newEmailInput = document.getElementById('newEmailInput');
+
+    // Tambah email user
+    addEmailForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = newEmailInput.value.trim();
+        if (!email) return;
+
+        fetch('/add-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.ok) {
+                alert(data.error || 'Gagal menambah user');
+                return;
+            }
+
+            // Buat bubble baru di DOM
+            const wrapper = document.createElement('div');
+            wrapper.className = 'email-wrapper mb-2';
+            wrapper.setAttribute('data-email', data.email);
+            wrapper.innerHTML = `
+                <div class="email-pill px-4 py-2 d-flex align-items-center text-white shadow-sm">
+                    <span class="flex-grow-1 email-pill-text">
+                        ${data.email}
+                    </span>
+                    <button type="button"
+                            class="btn btn-sm btn-link text-white text-decoration-none ms-3 p-0"
+                            data-email="${data.email}">
+                         <i class="bi bi-x-octagon-fill"></i>
+                    </button>
+                </div>
+            `;
+
+            emailListEl.appendChild(wrapper);
+            addEmailForm.reset();
+        })
+        .catch(err => {
+            console.error('Error add-user:', err);
+            alert('Terjadi kesalahan saat menambah user');
+        });
+    });
+
+    // Hapus email user (klik X)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-email]');
+        if (!btn) return;
+
+        const email = btn.getAttribute('data-email');
+        if (!confirm(`Hapus user ${email}?`)) return;
+
+        fetch('/delete-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.ok) {
+                alert(data.error || 'Gagal menghapus user');
+                return;
+            }
+
+            // Hapus elemen dari DOM
+            const wrapper = document.querySelector(`.email-wrapper[data-email="${email}"]`);
+            if (wrapper) wrapper.remove();
+        })
+        .catch(err => {
+            console.error('Error delete-user:', err);
+            alert('Terjadi kesalahan saat menghapus user');
+        });
+    });
+</script>
+
+
+</body>
+</html>

@@ -3,7 +3,7 @@ import mysql.connector
 from db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
-from model.promptTemplate import promptConvertQuery, promptGetAnswer, promptFilter, promptEmail, promptFQ, promptVis
+from model.promptTemplate import promptGetAnswer, promptFilter, promptEmail, promptVis, promptCheckVis
 import os, sqlparse, json
 from dotenv import load_dotenv
 load_dotenv()
@@ -36,18 +36,8 @@ def fillterQuestion(question):
     answer = llm.invoke(
         reformat
     )
-    return answer.content
-
-def createQuery(question):
-    if not question:
-        return None
-    reformat = promptConvertQuery.format(question=question)
-
-    answer = llm.invoke(
-       reformat
-    )
-
-    return clean_sql(answer.content)
+    clean = clean_sql(answer.content)
+    return clean
 
 def getRawData(query):
     conn = create_connection()
@@ -105,13 +95,11 @@ def saveData(session_id, question, query, rawData, answer, visualisasion):
         cursor.close()
         conn.close()
 
-def isQuery(question):
-    reformat = promptFQ.format(question = question)
-
-    answer = llm.invoke(reformat)
-    return answer.content
-
 def Vis(data):
+    check = promptCheckVis.format(data = data)
+    ck = llm.invoke(check)
+    if ck.content == None or ck.content == "None":
+        return ck.content, None
     reformat = promptVis.format(data = data)
 
     answer = llm.invoke(reformat)

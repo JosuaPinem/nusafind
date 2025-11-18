@@ -1,22 +1,21 @@
 from flask import Flask, jsonify
-from model.model import createQuery, getRawData, createAnswer, fillterQuestion, saveData, isQuery, Vis
+from model.model import getRawData, createAnswer, fillterQuestion, saveData, Vis
 from db.connection import create_local_connection
 import mysql.connector
 
 class askService:
     def ask_service(self, question, session_id):
-        isquery = isQuery(question)
-        if isquery == "Tidak":
-            fillter = fillterQuestion(question)
-            if fillter == "False":
-                return "Mohon maaf sebelumnya, permintaan yang Anda ajukan tidak dapat diproses karena tidak sesuai dengan data yang tersedia. Untuk data yang anda butuhkan silahkan hubungi Tim BIS untuk membantu Anda!.", None, None
+        fillter = fillterQuestion(question)
+        print(fillter)
+        if fillter == False or fillter == 'FALSE':
+            return "Mohon maaf sebelumnya, permintaan yang Anda ajukan tidak dapat diproses karena tidak sesuai dengan data yang tersedia. Untuk data yang anda butuhkan silahkan hubungi Tim BIS untuk membantu Anda!.", None, None
 
-        query = createQuery(question)
-
-        if query is None:
+        if fillter is None:
             return None, None, None
         
-        rawData = getRawData(query)
+        rawData = getRawData(fillter)
+        print("sampai sini")
+        print(rawData)
 
         if rawData is None:
             return None, None, None
@@ -25,13 +24,13 @@ class askService:
         if getchart is None:
             return None, None, None
         
-        answer = createAnswer(rawData, query, question)
+        answer = createAnswer(rawData, fillter, question)
         if answer is None:
             return None, None, None
-        save = saveData(session_id, question, query, rawData, answer, vis)
+        save = saveData(session_id, question, fillter, rawData, answer, vis)
         if save is False:
             return "Mohon maaf data tidak berhasil disimpan.", "", ""
-        return answer, query, getchart
+        return answer, fillter, getchart
     
     def getChatHis(self, session_id):
         conn = create_local_connection()

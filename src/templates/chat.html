@@ -11,6 +11,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename=('/css/chat.css'))}}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+
+
 </head>
 <body>
     <div class="chat-container">
@@ -49,9 +56,13 @@
                 <button class="send-button" id="sendButton" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
                 </button>
+
+                <div id="modalBody"></div>
             </div>
         </div>
     </div>
+    
+
 
     <!-- Modal for displaying SQL Query -->
     <div id="sqlModal" class="modal">
@@ -662,6 +673,81 @@
             modal.style.display = 'block';
         }
 
+        function loginModal() {
+            modalBody.innerHTML = `
+                <div class="modal fade" id="loginModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                        
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Login Superadmin</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <form id="superadminForm">
+                                    <div class="mb-3">
+                                        <label for="superadminEmail" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="superadminEmail" placeholder="superadmin@example.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="superadminPassword" class="form-label">Password</label>
+                                        <input type="password" class="form-control" id="superadminPassword" placeholder="Password" required>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="btnSuperadminLogin">Login</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const modalEl = document.getElementById('loginModal');
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            document.getElementById('btnSuperadminLogin').addEventListener('click', () => {
+                const email = document.getElementById('superadminEmail').value;
+                const password = document.getElementById('superadminPassword').value;
+
+                // simple validation
+                if (!email || !password) {
+                    alert("Email dan password wajib diisi");
+                    return;
+                }
+
+                fetch('/login-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.isLogin) {
+                        alert(data.error || 'Login gagal');
+                        return;
+                    }
+
+                    // sukses, redirect ke halaman admin
+                    window.location.href = data.redirect || '/admin';
+                })
+                .catch(error => {
+                    console.error('Error during login:', error);
+                    alert('Terjadi kesalahan saat login');
+                })
+                .finally(() => {
+                    if (typeof hideTyping === 'function') {
+                        hideTyping();
+                    }
+                });
+            });
+        }
+
         function normalizeIndent(sql) {
         const lines = String(sql).replace(/\t/g, '  ').replace(/\\n/g, '\n').split('\n');
         const nonEmpty = lines.filter(l => l.trim().length);
@@ -788,6 +874,9 @@
                 resetInput(input, sendBtn);
                 hideTyping();
                 return;
+            } else if (message.toLowerCase() == "superadmin" || message.toLowerCase() == 'super admin'){
+                console.log("masuk")
+                loginModal();
             }
 
             if (isLoggedIn) {
@@ -918,5 +1007,8 @@
         setInterval(isLoggedIn, sessionId, 5000)
         
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

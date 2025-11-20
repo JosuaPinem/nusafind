@@ -3,7 +3,7 @@ import mysql.connector
 from db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
-from model.promptTemplate import promptGetAnswer, promptFilter, promptEmail, promptVis, promptCheckVis
+from model.promptTemplate import promptGetAnswer, promptFilter, promptEmail, promptVis
 import os, sqlparse, json
 from dotenv import load_dotenv
 load_dotenv()
@@ -33,10 +33,13 @@ def clean_sql(answer: str) -> str:
 
 def fillterQuestion(question):
     reformat = promptFilter.format(question=question)
-    answer = llm.invoke(
-        reformat
-    )
-    clean = clean_sql(answer.content)
+    answer = llm.invoke(reformat)
+    content = answer.content.strip()
+
+    if content.lower() == "false":
+        return False  # bener2 boolean False
+
+    clean = clean_sql(content)
     return clean
 
 def getRawData(query):
@@ -95,11 +98,19 @@ def saveData(session_id, question, query, rawData, answer, visualisasion):
         cursor.close()
         conn.close()
 
+def need_vis(data):
+    if not data:
+        return False
+    if len(data) < 2:
+        return False
+    # contoh: kalau ada kolom date atau month atau amount/service_price, anggap perlu chart
+    sample = data[0]
+    num_cols = [k for k, v in sample.items() if isinstance(v, (int, float))]
+    if len(num_cols) == 0:
+        return False
+    return True
+
 def Vis(data):
-    check = promptCheckVis.format(data = data)
-    ck = llm.invoke(check)
-    if ck.content == None or ck.content == "None":
-        return ck.content, None
     reformat = promptVis.format(data = data)
 
     answer = llm.invoke(reformat)

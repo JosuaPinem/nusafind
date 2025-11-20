@@ -7,7 +7,7 @@ class askService:
     def ask_service(self, question, session_id):
         fillter = fillterQuestion(question)
         print(fillter)
-        if fillter == False or fillter == 'FALSE':
+        if fillter == False:
             return "Mohon maaf sebelumnya, permintaan yang Anda ajukan tidak dapat diproses karena tidak sesuai dengan data yang tersedia. Untuk data yang anda butuhkan silahkan hubungi Tim BIS untuk membantu Anda!.", None, None
 
         if fillter is None:
@@ -19,17 +19,20 @@ class askService:
 
         if rawData is None:
             return None, None, None
-        
+        print("masuk visualisasi")
         getchart, vis = Vis(rawData)
-        if getchart is None:
-            return None, None, None
-        
+        print("keluar visualisasi")
+        print("masuk create jawaban")
         answer = createAnswer(rawData, fillter, question)
+        print("keluar create jawaban")
         if answer is None:
             return None, None, None
+        print("masuk simpan data")
         save = saveData(session_id, question, fillter, rawData, answer, vis)
+        print("keluar simpan data")
         if save is False:
             return "Mohon maaf data tidak berhasil disimpan.", "", ""
+        print(answer)
         return answer, fillter, getchart
     
     def getChatHis(self, session_id):

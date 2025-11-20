@@ -220,12 +220,12 @@ def timedelta_to_seconds(timedelta_obj):
 
 @app.route("/logout", methods=["GET"])
 def logout():
-    session.pop('session_id', None)
+    session.clear()  # hapus semua key di session
     return jsonify({"message": "Logout successful", "isLogin": False}), 200
 
 @app.route("/reset", methods=["GET"])
 def reset():
-    session.pop('session_id', None)
+    session.clear()
     return redirect(url_for('home'))
 
 

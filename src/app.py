@@ -111,7 +111,7 @@ def login():
 
 @app.route("/login-admin", methods=['POST'])
 def login_admin_route():
-    if session['session_id'] :
+    if 'session_id' in session :
        return redirect(url_for('home'))
     body = request.get_json()
 

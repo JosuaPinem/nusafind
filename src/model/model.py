@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 import mysql.connector
 from db.connection import create_connection, create_local_connection
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from model.promptTemplate import promptGetAnswer, promptFilter, promptEmail, promptVis
 import os, sqlparse, json
 from dotenv import load_dotenv
